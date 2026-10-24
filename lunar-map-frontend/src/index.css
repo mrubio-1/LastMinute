@@ -56,6 +56,78 @@ html, body, #root {
   font-family: monospace;
 }
 
+.route-panel {
+  position: absolute;
+  left: 16px;
+  top: 80px;
+  z-index: 1000;
+  width: 220px;
+  padding: 12px;
+  color: white;
+  background: rgba(11, 11, 12, 0.9);
+  border-radius: 6px;
+  font-family: sans-serif;
+}
+
+.route-panel h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.route-option {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px;
+  color: white;
+  text-align: left;
+  background: #262626;
+  border: 1px solid #555;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.route-option:hover {
+  background: #363636;
+}
+
+.route-option--selected {
+  background: #315d45;
+  border-color: #82d49b;
+}
+
+.route-option span {
+  margin-top: 3px;
+  color: #c8c8c8;
+  font-size: 12px;
+}
+
+.plan-route-button {
+  position: absolute;
+  left: 16px;
+  bottom: 105px;
+  z-index: 1000;
+  padding: 10px 14px;
+  color: white;
+  background: #2f8f83;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.route-status {
+  position: absolute;
+  left: 16px;
+  bottom: 105px;
+  z-index: 1000;
+  padding: 10px 14px;
+  color: white;
+  background: rgba(11, 11, 12, 0.9);
+  border-radius: 6px;
+  font-family: sans-serif;
+}
+
 .marker-button {
   position: absolute;
   bottom: 64px;

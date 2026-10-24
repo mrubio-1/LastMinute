@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { APOLLO_11_MAP } from '../config/apollo11Map.js';
+import { createMockRoutes } from '../data/mockroutes.js';
 
 const IMAGE_URL =
     '/testImage.webp';
@@ -14,6 +15,9 @@ function MapCanvas() {
     const [isSelectingDestination, setIsSelectingDestination] = useState(false);
     const [userMarkers, setUserMarkers] = useState([]);
     const [interactionMode, setInteractionMode] = useState('inspect');
+    const [selectedRouteId, setSelectedRouteId] = useState(null);
+    const [routeStatus, setRouteStatus] = useState('idle');
+    const [routes, setRoutes] = useState([]);
 
     useEffect(() => {
         const { widthPixels, heightPixels } = APOLLO_11_MAP.image;
@@ -56,19 +60,30 @@ function MapCanvas() {
             .bindPopup('<strong>Current location</strong><br>Simulated position')
             .addTo(map);
 
-        if (destination) {
-            L.polyline(
-                [
-                    [yMeters, xMeters],
-                    [destination.lat, destination.lng]
-                ],
-                {
-                    color: '#63a163',
-                    weight: 4,
-                    opacity: 0.9,
-                    dashArray: '10, 8',
-                },
-            ).addTo(map);
+        if (destination && routes.length > 0) {
+            routes.forEach((route) => {
+                L.polyline(route.points, {
+                    color: selectedRouteId === route.id
+                        ? '#ffffff'
+                        : route.risk === 'low'
+                            ? '#63a163'
+                            : route.risk === 'medium'
+                                ? '#f1c40f'
+                                : route.risk === 'high'
+                                    ? '#e74c3c'
+                                    : '#95a5a6',
+                    weight: selectedRouteId === route.id ? 7 : 4,
+                    opacity: selectedRouteId === route.id ? 1 : 0.55,
+                })
+                    .bindPopup(`
+            <strong>${route.name}</strong><br>
+            ${route.description}<br>
+            Distance: ${route.distanceMeters} m<br>
+            Estimated time: ${route.estimatedTimeMinutes} minutes<br>
+            Risk: ${route.risk}
+        `)
+                    .addTo(map);
+            });
 
             L.circleMarker([destination.lat, destination.lng], {
                 radius: 5,
@@ -100,11 +115,14 @@ function MapCanvas() {
             X: ${marker.position.lng.toFixed(2)}<br>
             Y: ${marker.position.lat.toFixed(2)}
         `);
-                mapMarker.on('click', () => {
-                    setDestination(marker.position);
-                });
+            mapMarker.on('click', () => {
+                setDestination(marker.position);
+                setSlectedRouteId(null);
+                setRoutes([]);
+                setRouteStatus('idle');
+            });
 
-                mapMarker.addTo(map);
+            mapMarker.addTo(map);
         });
 
 
@@ -123,6 +141,9 @@ function MapCanvas() {
             if (isSelectingDestination) {
                 setDestination(e.latlng);
                 setIsSelectingDestination(false);
+                setSelectedRouteId(null);
+                setRoutes([]);
+                setRouteStatus('idle');
                 return;
             }
 
@@ -147,7 +168,7 @@ function MapCanvas() {
             map.off('mousemove', handleMouseMove);
             map.remove();
         };
-    }, [isSelectingDestination, destination, interactionMode, userMarkers,]);
+    }, [isSelectingDestination, destination, interactionMode, userMarkers, selectedRouteId, routes,]);
 
     return (
         <div className="map-shell">
@@ -160,7 +181,10 @@ function MapCanvas() {
 
             <button
                 className="marker-button"
-                onClick={() => setInteractionMode('place-marker')}
+                onClick={() => {
+                    setInteractionMode('place-marker');
+                    setRouteStatus('idle');
+                }}
             >
                 Place Marker
             </button>
@@ -181,6 +205,56 @@ function MapCanvas() {
                     Destination selected:
                     <br />
                     X: {destination.lng.toFixed(2)}, Y: {destination.lat.toFixed(2)}
+                </div>
+            )}
+            {destination && routeStatus === 'idle' && (
+                <button
+                    className="plan-route-button"
+                    onClick={() => {
+                        setRouteStatus('loading');
+
+                        window.setTimeout(() => {
+                            const { xMeters, yMeters } = APOLLO_11_MAP.landingSite;
+
+                            const nextRoutes = createMockRoutes(
+                                [yMeters, xMeters],
+                                [destination.lat, destination.lng],
+                            );
+
+                            setRoutes(nextRoutes);
+                            setRouteStatus('success');
+                        }, 500);
+                    }}
+                >
+                    Plan Route
+                </button>
+            )}
+            {routeStatus === 'loading' && (
+                <div className="route-status">
+                    Calculating possible route...
+                </div>
+            )}
+
+            {destination && routeStatus === 'success' && (
+                <div className="route-panel">
+                    <h2>Available routes</h2>
+
+                    {routes.map((route) => (
+                        <button
+                            key={route.id}
+                            className={`route-option ${selectedRouteId === route.id
+                                ? 'route-option--selected'
+                                : ''
+                                }`}
+                            onClick={() => setSelectedRouteId(route.id)}
+                        >
+                            <strong>{route.name}</strong>
+                            <span>{route.description}</span>
+                            <span>{route.distanceMeters} m</span>
+                            <span>{route.estimatedTimeMinutes} minutes</span>
+                            <span>Risk: {route.risk}</span>
+                        </button>
+                    ))}
                 </div>
             )}
         </div>
