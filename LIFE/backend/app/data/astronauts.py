@@ -3,9 +3,8 @@
 
 from app.models import astronauts
 
-astronauts_info = astronauts.Astronaut(
-    id=1,
-    name="John Doe",
-    x=0.0,
-    y=0.0
-)
+roster = [
+    astronauts.Astronaut(id=1, name="Buzz Lightyear", x=0.0, y=0.0, active=False),
+    astronauts.Astronaut(id=2, name="Neil Armstrong", x=5.0, y=5.0, active=False),
+    astronauts.Astronaut(id=3, name="Michael Collins", x=10.0, y=10.0, active=False)
+]

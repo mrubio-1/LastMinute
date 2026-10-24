@@ -1,8 +1,10 @@
+from fastapi import FastAPI
+ 
+from app.routers import astronauts, hazards, locations
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from app.routers import astronauts
-from luna_navigator import LunarNavigator, VEHICLE_SPECS
+from app.services.luna_navigator import LunarNavigator, VEHICLE_SPECS
 
 
 class Point(BaseModel):
@@ -49,6 +51,8 @@ def calculate_route(request: RouteRequest):
         destination=request.destination.model_dump(),
     )
 app.include_router(astronauts.router)
+app.include_router(hazards.router)
+app.include_router(locations.router)
 
 @app.get("/health", tags=["Health"])
 def health_check():
