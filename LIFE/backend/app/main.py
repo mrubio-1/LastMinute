@@ -1,6 +1,6 @@
 from fastapi import FastAPI
  
-from app.routers import astronauts
+from app.routers import astronauts, hazards
 
 app = FastAPI(
     title="L.I.F.E API",
@@ -9,6 +9,7 @@ app = FastAPI(
 )
 
 app.include_router(astronauts.router)
+app.include_router(hazards.router)
 
 @app.get("/health", tags=["Health"])
 def health_check():
