@@ -1,22 +1,8 @@
 from fastapi import FastAPI
  
-from app.routers import astronauts, hazards, locations
-from fastapi import FastAPI, HTTPException
+from app.routers import astronauts, hazards, locations, navigation
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from app.services.luna_navigator import LunarNavigator, VEHICLE_SPECS
 
-
-class Point(BaseModel):
-    x: float
-    y: float
-
-
-class RouteRequest(BaseModel):
-    current_location: Point
-    destination: Point
-    vehicle_type: str = "Unpressurized Rover"
-from fastapi import FastAPI
 
 app = FastAPI(
     title="L.I.F.E API",
@@ -37,22 +23,10 @@ app.add_middleware(
 )
 
 
-@app.post("/navigation/route")
-def calculate_route(request: RouteRequest):
-    if request.vehicle_type not in VEHICLE_SPECS:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Unknown vehicle type: {request.vehicle_type}",
-        )
-
-    navigator = LunarNavigator(vehicle_type=request.vehicle_type)
-    return navigator.get_route_data(
-        current_location=request.current_location.model_dump(),
-        destination=request.destination.model_dump(),
-    )
 app.include_router(astronauts.router)
 app.include_router(hazards.router)
 app.include_router(locations.router)
+app.include_router(navigation.router)
 
 @app.get("/health", tags=["Health"])
 def health_check():
