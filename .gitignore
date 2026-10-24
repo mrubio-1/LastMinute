@@ -1,0 +1,59 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+.pyre/
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Environment and secrets
+.env.*
+!.env.example
+*.env
+
+# Packaging and build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# Test coverage and reports
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.cache/
+
+# FastAPI / Uvicorn runtime files
+*.log
+*.pid
+
+# Databases and local data
+*.sqlite3
+*.db
+instance/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Tooling
+.tox/
+.nox/
