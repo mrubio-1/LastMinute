@@ -228,15 +228,16 @@ Navigate the Moon. Protect Every Life.
 From the repository root:
 
 ```bash
-cd LIFE/backend
-python -m venv venv
-source venv/bin/activate
+python -m venv LIFE/backend/venv
+source LIFE/backend/venv/bin/activate
 python -m pip install -r requirements.txt
+cd LIFE/backend
 python -m uvicorn app.main:app --reload
 ```
 
 The API runs at `http://127.0.0.1:8000`. On Windows PowerShell, activate the
-environment with `.\venv\Scripts\Activate.ps1` instead.
+environment with `.\LIFE\backend\venv\Scripts\Activate.ps1` instead, then run
+`cd LIFE\backend` before starting Uvicorn.
 
 ### Frontend
 
