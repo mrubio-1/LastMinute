@@ -4,7 +4,9 @@ import 'leaflet/dist/leaflet.css';
 import { APOLLO_11_MAP } from '../config/apollo11Map.js';
 
 const IMAGE_URL = '/testImage.webp';
-const API_URL = 'http://127.0.0.1:8000/navigation/route';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const API_URL = `${API_BASE_URL}/navigation/route`;
+const HAZARDS_STORAGE_KEY = 'life-hazards';
 const VEHICLE_OPTIONS = [
     { id: 'xEMU Suit', label: 'Suit', icon: '🚶' },
     { id: 'Unpressurized Rover', label: 'Rover', icon: '▣' },
@@ -44,10 +46,55 @@ function createMarkerIcon(type) {
     });
 }
 
+function normalizeHazards(parsedHazards) {
+        const hazards = Array.isArray(parsedHazards)
+            ? parsedHazards
+            : Array.isArray(parsedHazards?.hazards)
+                ? parsedHazards.hazards
+                : [];
+
+        return hazards
+            .map((hazard, index) => {
+                const x = hazard.x ?? hazard.position?.x ?? hazard.coordinates?.x;
+                const y = hazard.y ?? hazard.position?.y ?? hazard.coordinates?.y;
+                const radius = hazard.radiusMeters
+                    ?? hazard.radius
+                    ?? hazard.extent
+                    ?? 20;
+
+                if (!Number.isFinite(Number(x)) || !Number.isFinite(Number(y))) {
+                    return null;
+                }
+
+                return {
+                    id: hazard.id ?? `hazard-${index}`,
+                    name: hazard.name ?? hazard.hazard ?? 'Surface hazard',
+                    description: hazard.description ?? hazard.action ?? '',
+                    severity: String(hazard.severity ?? hazard.status ?? 'warning').toLowerCase(),
+                    position: { x: Number(x), y: Number(y) },
+                    radius: Number(radius),
+                };
+            })
+            .filter(Boolean);
+}
+
+function readStoredHazards() {
+    try {
+        const storedHazards = window.localStorage.getItem(HAZARDS_STORAGE_KEY);
+        return storedHazards ? normalizeHazards(JSON.parse(storedHazards)) : [];
+    } catch {
+        return [];
+    }
+}
+
 function MapCanvas() {
     const mapElementRef = useRef(null);
     const [mousePosition, setMousePosition] = useState(null);
     const [destination, setDestination] = useState(null);
+    const [currentLocation, setCurrentLocation] = useState({
+        x: APOLLO_11_MAP.landingSite.xMeters,
+        y: APOLLO_11_MAP.landingSite.yMeters,
+    });
     const [startLocation, setStartLocation] = useState({
         id: 'landing-site',
         label: 'Eagle landing site',
@@ -68,6 +115,7 @@ function MapCanvas() {
     const [vehicleType, setVehicleType] = useState('Unpressurized Rover');
     const [selectingField, setSelectingField] = useState(null);
     const [sidebarPanel, setSidebarPanel] = useState(null);
+    const [hazards, setHazards] = useState(() => readStoredHazards());
 
     const resetRoutes = () => {
         setRoutes([]);
@@ -75,6 +123,51 @@ function MapCanvas() {
         setRouteStatus('idle');
         setRouteError('');
     };
+
+    useEffect(() => {
+        let cancelled = false;
+
+        fetch(`${API_BASE_URL}/astronaut/location`)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Location request failed with status ${response.status}.`);
+                }
+                return response.json();
+            })
+            .then((location) => {
+                if (!cancelled && Number.isFinite(Number(location.x)) && Number.isFinite(Number(location.y))) {
+                    setCurrentLocation({ x: Number(location.x), y: Number(location.y) });
+                    setStartLocation((previous) => previous.id === 'landing-site'
+                        ? {
+                            id: 'current-location',
+                            label: 'Current location',
+                            position: { lat: Number(location.y), lng: Number(location.x) },
+                        }
+                        : previous);
+                }
+            })
+            .catch(() => {
+                // The configured Apollo 11 position remains the local fallback.
+            });
+
+        fetch(`${API_BASE_URL}/hazards`)
+            .then((response) => response.ok ? response.json() : null)
+            .then((data) => {
+                if (data) {
+                    setHazards(normalizeHazards(data));
+                }
+            })
+            .catch(() => {
+                // Local storage remains the fallback until the hazards endpoint is available.
+            });
+
+        const updateHazards = () => setHazards(readStoredHazards());
+        window.addEventListener('storage', updateHazards);
+        return () => {
+            cancelled = true;
+            window.removeEventListener('storage', updateHazards);
+        };
+    }, []);
 
     const openNewMarkerEditor = (position) => {
         setMarkerEditor({
@@ -246,8 +339,8 @@ function MapCanvas() {
         });
 
         const currentLocationMarker = L.marker([
-            APOLLO_11_MAP.landingSite.yMeters,
-            APOLLO_11_MAP.landingSite.xMeters,
+            currentLocation.y,
+            currentLocation.x,
         ], { icon: createMarkerIcon('current') })
             .bindPopup('<strong>Current location</strong><br>Simulated astronaut position')
             .addTo(map);
@@ -263,6 +356,26 @@ function MapCanvas() {
             }
         });
 
+        hazards.forEach((hazard) => {
+            const severity = hazard.severity.includes('critical') || hazard.severity.includes('high')
+                ? 'critical'
+                : hazard.severity.includes('medium') || hazard.severity.includes('warning')
+                    ? 'warning'
+                    : 'info';
+            const circle = L.circle([hazard.position.y, hazard.position.x], {
+                radius: Math.max(hazard.radius, 1),
+                color: severity === 'critical' ? '#ef4444' : severity === 'warning' ? '#f59e0b' : '#38bdf8',
+                fillColor: severity === 'critical' ? '#ef4444' : severity === 'warning' ? '#f59e0b' : '#38bdf8',
+                fillOpacity: 0.2,
+                weight: 2,
+            }).addTo(map);
+            circle.bindPopup(`
+                <strong>${hazard.name}</strong><br>
+                ${hazard.description || 'Hazard area'}<br>
+                Extent: ${hazard.radius} m
+            `);
+        });
+
         if (
             startLocation.position.lat !== APOLLO_11_MAP.landingSite.yMeters
             || startLocation.position.lng !== APOLLO_11_MAP.landingSite.xMeters
@@ -274,7 +387,7 @@ function MapCanvas() {
                 .addTo(map);
         }
 
-        if (destination) {
+        if (destination && interactionMode === 'destination') {
             routes.forEach((route) => {
                 L.polyline(route.points, {
                     color: selectedRouteId === route.id
@@ -379,6 +492,8 @@ function MapCanvas() {
         };
     }, [
         destination,
+        currentLocation,
+        hazards,
         interactionMode,
         routes,
         selectedRouteId,
@@ -478,6 +593,14 @@ function MapCanvas() {
             </button>
 
             <div ref={mapElementRef} className="map-canvas" />
+
+            {routeStatus === 'loading' && (
+                <div className="route-loading" role="status" aria-live="polite">
+                    <div className="route-loading__spinner" />
+                    <strong>Calculating lunar routes</strong>
+                    <span>Checking terrain, hazards, and vehicle limits...</span>
+                </div>
+            )}
 
             <div className="coordinate-tracker">
                 {mousePosition ? (

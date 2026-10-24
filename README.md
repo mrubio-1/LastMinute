@@ -220,3 +220,52 @@ The current focus is developing a functional local prototype that demonstrates l
 ## 🌕 L.I.F.E.
 
 Navigate the Moon. Protect Every Life.
+
+## ▶️ Run the local prototype
+
+### Backend
+
+From the repository root:
+
+```bash
+cd LIFE/backend
+python -m venv venv
+source venv/bin/activate
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
+```
+
+The API runs at `http://127.0.0.1:8000`. On Windows PowerShell, activate the
+environment with `.\venv\Scripts\Activate.ps1` instead.
+
+### Frontend
+
+In a second terminal:
+
+```bash
+cd lunar-map-frontend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
+`VITE_API_URL` controls which backend URL the frontend uses. Update `.env` when
+the backend is hosted somewhere other than the local default.
+
+### Smoke checks
+
+```bash
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/astronaut/location
+curl -X POST http://127.0.0.1:8000/navigation/route \
+  -H "Content-Type: application/json" \
+  -d '{"current_location":{"x":450,"y":290},"destination":{"x":700,"y":420},"vehicle_type":"Unpressurized Rover"}'
+```
+
+Build the frontend before pushing:
+
+```bash
+cd lunar-map-frontend
+npm run build
+```

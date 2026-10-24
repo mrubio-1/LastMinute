@@ -12,12 +12,17 @@ function App() {
   if (isLoading) {
     return (
       <main className="splash-screen">
-        <div className="splash-screen__image" aria-hidden="true">
-          <span>L.I.F.E.</span>
+      <div className="splash-screen__brand">
+        <div className="splash-screen__image">
+          <img
+            src="/assets/logo/LIFE%20logo.png"
+            alt="L.I.F.E. lunar mission logo"
+          />
         </div>
         <h1>L.I.F.E.</h1>
-        <p>Lunar Integrated Framework for Exploration</p>
-      </main>
+      </div>
+      <p>Lunar Integrated Framework for Exploration</p>
+    </main>
     );
   }
 
