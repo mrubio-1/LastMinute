@@ -1,4 +1,4 @@
-from .luna_navigator import LunarNavigator
+from ...luna_navigator import LunarNavigator
 
 # Track an astronaut's remaining oxygen supply.
 def calculate_remaining_oxygen(current_oxygen_liters, oxygen_used_liters):
