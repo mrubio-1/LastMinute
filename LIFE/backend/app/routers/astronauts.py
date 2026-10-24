@@ -1,6 +1,6 @@
-from fastapi import APIRouter
-from app.services import astronaut_service
-from app.models import astronauts, hazard
+from fastapi import APIRouter, HTTPException
+from app.services import astronaut_service, satellite as satellite_service
+from app.models import astronauts, hazard, satellite
 
 router = APIRouter(prefix="/astronaut", tags=["Astronaut"])
 
@@ -27,4 +27,13 @@ def move_astronaut(movement: astronauts.AstronautMove):
 @router.get("/hazards", response_model=list[hazard.Hazard])
 def get_nearby_hazards():
     return astronaut_service.get_nearby_hazards()
+
+@router.get("/positioning", response_model=satellite.SatellitePositionResponse)
+def get_astronaut_positioning():
+    # This endpoint retrieves the astronaut's position using trilateration based on distances from three satellites.
+    # It returns the number of satellites used, the distances from each satellite, the estimated position, and the positioning status.
+    try:
+        return satellite_service.track_astronaut_with_satellites()
+    except ValueError as e:
+        return {"error": HTTPException(status_code=500, detail=str(e))}
 
