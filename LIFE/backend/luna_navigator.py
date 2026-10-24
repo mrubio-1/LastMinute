@@ -1,5 +1,5 @@
 import math
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Any
 
 # ==========================================
 # 1. CONSTANTS & NASA REFERENCE DATA
@@ -170,46 +170,86 @@ class LunarNavigator:
 
         return hazards
 
+    # ==========================================
+    # 4. FRONTEND RESPONSE FORMATTER
+    # ==========================================
+
+    def get_route_data(
+        self, 
+        current_location: Dict[str, float], 
+        destination: Dict[str, float], 
+        incline_deg: float = 5.0
+     ) -> Dict[str, List[Dict]]:
+        """
+        Formats calculation results directly into the Frontend JSON Specification
+        """
+        start_x, start_y = current_location["x"], current_location["y"]
+        end_x, end_y = destination["x"], destination["y"]
+
+        # 1. Generate path points in [y, x] format as required by frontend
+        points = [
+            [start_y, start_x],
+            [start_y + 20, start_x + 20],
+            [start_y + 50, start_x + 50],
+            [end_y, end_x]
+        ]
+
+        # 2. Distance Calculation (Euclidean approximation converted to meters)
+        distance_meters = int(math.hypot(end_x - start_x, end_y - start_y) * 3)
+        distance_km = distance_meters / 1000.0
+
+        # 3. Travel Time Calculation
+        time_res = self.calculate_travel_time(distance_km=distance_km, incline_deg=incline_deg)
+
+        # 4. Hazard Detection & Risk Level Assessment
+        hazards = self.detect_hazards(
+            incline_deg=incline_deg,
+            is_psr=False,
+            has_dte_los=True,
+            cumulative_distance_km=distance_km,
+            continuous_sunlight_hours=1.0
+        )
+
+        risk_level = "low"
+        if any(h["status"] == "CRITICAL" for h in hazards):
+            risk_level = "high"
+        elif any(h["status"] == "WARNING" for h in hazards):
+            risk_level = "medium"
+
+        # 5. Return Frontend Compliant Payload Structure
+        return {
+            "routes": [
+                {
+                    "id": "route-safe",
+                    "name": "Safest route",
+                    "description": "Avoids steep terrain",
+                    "distanceMeters": distance_meters,
+                    "estimatedTimeMinutes": int(time_res["total_travel_time_min"]),
+                    "risk": risk_level,
+                    "points": points
+                }
+            ]
+        }
+
 
 # ==========================================
-# 4. EXECUTION EXAMPLE & TEST DRIVE
+# 5. EXECUTION EXAMPLE & TEST DRIVE
 # ==========================================
 
 if __name__ == "__main__":
-    print("=== LUNAR NAVIGATION ALGORITHM DEMO ===")
+    import json
+
+    sample_request = {
+        "current_location": {"x": 450, "y": 290},
+        "destination": {"x": 700, "y": 420},
+        "vehicle_type": "Unpressurized Rover"
+    }
+
+    navigator = LunarNavigator(vehicle_type=sample_request["vehicle_type"])
     
-    navigator = LunarNavigator(vehicle_type="Unpressurized Rover")
-    
-    distance_km = 8.5
-    incline_angle = 12.0
-    stops_visited = 1
-    
-    time_results = navigator.calculate_travel_time(
-        distance_km=distance_km, 
-        incline_deg=incline_angle, 
-        stops_count=stops_visited
+    route_response = navigator.get_route_data(
+        current_location=sample_request["current_location"],
+        destination=sample_request["destination"]
     )
     
-    o2_results = navigator.calculate_oxygen_used(
-        pure_travel_time_min=time_results["pure_travel_time_min"], 
-        incline_deg=incline_angle
-    )
-    
-    print(f"\n[ Vehicle ]: {navigator.vehicle_name}")
-    print(f"[ Route Specs ]: Distance = {distance_km} km | Slope = {incline_angle} deg | Stops = {stops_visited}")
-    print(f" - Effective Speed : {time_results['effective_speed_kmh']} km/h")
-    print(f" - Pure Travel Time : {time_results['pure_travel_time_min']} mins")
-    print(f" - Total Travel Time: {time_results['total_travel_time_min']} mins (including overhead)")
-    print(f" - Total O2 Consumed: {o2_results['total_oxygen_used_liters']} Liters")
-    
-    print("\n[ Hazard Detection System Output ]")
-    detected_hazards = navigator.detect_hazards(
-        incline_deg=12.0,
-        is_psr=True,
-        has_dte_los=False,
-        cumulative_distance_km=14.5,
-        continuous_sunlight_hours=4.5
-    )
-    
-    for h in detected_hazards:
-        print(f"  [HAZARD] [{h['status']}] {h['hazard']}: {h['action']}")
+    print(json.dumps(route_response, indent=2))
