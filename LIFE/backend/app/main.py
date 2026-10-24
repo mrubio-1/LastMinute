@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
+from app.routers import astronauts
 from luna_navigator import LunarNavigator, VEHICLE_SPECS
 
 
@@ -14,6 +14,7 @@ class RouteRequest(BaseModel):
     current_location: Point
     destination: Point
     vehicle_type: str = "Unpressurized Rover"
+from fastapi import FastAPI
 
 app = FastAPI(
     title="L.I.F.E API",
@@ -47,3 +48,9 @@ def calculate_route(request: RouteRequest):
         current_location=request.current_location.model_dump(),
         destination=request.destination.model_dump(),
     )
+app.include_router(astronauts.router)
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    return {"status": "ok"}
+
