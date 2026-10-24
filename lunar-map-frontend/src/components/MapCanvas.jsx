@@ -11,6 +11,38 @@ const VEHICLE_OPTIONS = [
     { id: 'Pressurized Cruiser', label: 'Cruiser', icon: '◈' },
     { id: 'Lunar Hopper', label: 'Hopper', icon: '↗' },
 ];
+const MARKER_TYPES = [
+    { id: 'base', label: 'Base' },
+    { id: 'oxygen', label: 'Oxygen refuel station' },
+    { id: 'landing', label: 'Landing site' },
+];
+
+function createMarkerIcon(type) {
+    const markerType = [
+        'base',
+        'oxygen',
+        'landing',
+        'current',
+        'destination',
+        'start',
+    ].includes(type) ? type : 'base';
+    const symbols = {
+        base: '⌂',
+        oxygen: 'O₂',
+        landing: '★',
+        current: '●',
+        destination: '◆',
+        start: '●',
+    };
+
+    return L.divIcon({
+        className: `lunar-marker lunar-marker--${markerType}`,
+        html: `<span><b>${symbols[markerType]}</b></span>`,
+        iconSize: [34, 42],
+        iconAnchor: [17, 38],
+        popupAnchor: [0, -34],
+    });
+}
 
 function MapCanvas() {
     const mapElementRef = useRef(null);
@@ -31,9 +63,11 @@ function MapCanvas() {
     const [routeError, setRouteError] = useState('');
     const [routes, setRoutes] = useState([]);
     const [markerEditor, setMarkerEditor] = useState(null);
-    const [startSearch, setStartSearch] = useState('');
+    const [startSearch, setStartSearch] = useState('Eagle landing site');
     const [theme, setTheme] = useState('dark');
     const [vehicleType, setVehicleType] = useState('Unpressurized Rover');
+    const [selectingField, setSelectingField] = useState(null);
+    const [sidebarPanel, setSidebarPanel] = useState(null);
 
     const resetRoutes = () => {
         setRoutes([]);
@@ -49,6 +83,7 @@ function MapCanvas() {
                 position,
                 title: '',
                 description: '',
+                type: 'base',
             },
         });
     };
@@ -134,9 +169,39 @@ function MapCanvas() {
             setRoutes(data.routes);
             setRouteStatus('success');
         } catch (error) {
-            setRouteError(error instanceof Error ? error.message : 'Unable to calculate routes.');
+            setRouteError(
+                error instanceof TypeError
+                    ? 'Could not reach the navigation backend. Start the FastAPI server at 127.0.0.1:8000 and try again.'
+                    : error instanceof Error
+                        ? error.message
+                        : 'Unable to calculate routes.',
+            );
             setRouteStatus('error');
         }
+    };
+
+    const selectMapLocation = (position, label, id = 'map-point') => {
+        setStartLocation({ id, label, position });
+        setStartSearch(label);
+        setSelectingField(null);
+        resetRoutes();
+    };
+
+    const swapLocations = () => {
+        if (!destination) {
+            return;
+        }
+
+        const previousStart = startLocation;
+        setStartLocation({
+            id: 'map-point',
+            label: `Map point (${destination.lng.toFixed(0)}, ${destination.lat.toFixed(0)})`,
+            position: destination,
+        });
+        setDestination(previousStart.position);
+        setStartSearch(previousStart.label);
+        setSelectingField(null);
+        resetRoutes();
     };
 
     useEffect(() => {
@@ -159,11 +224,8 @@ function MapCanvas() {
         map.fitBounds(bounds);
 
         const { xMeters, yMeters } = APOLLO_11_MAP.landingSite;
-        const landingSiteMarker = L.circleMarker([yMeters, xMeters], {
-            radius: 10,
-            color: '#f4c95d',
-            fillColor: '#f4c95d',
-            fillOpacity: 1,
+        const landingSiteMarker = L.marker([yMeters, xMeters], {
+            icon: createMarkerIcon('landing'),
         })
             .bindPopup(`
                 <strong>Eagle Lunar Module</strong><br>
@@ -174,28 +236,30 @@ function MapCanvas() {
         landingSiteMarker.on('click', (event) => {
             if (interactionMode === 'destination') {
                 L.DomEvent.stopPropagation(event);
-                setDestination(landingSiteMarker.getLatLng());
-                resetRoutes();
+                if (selectingField === 'start') {
+                    selectMapLocation(landingSiteMarker.getLatLng(), 'Eagle landing site', 'landing-site');
+                } else {
+                    setDestination(landingSiteMarker.getLatLng());
+                    resetRoutes();
+                }
             }
         });
 
-        const currentLocationMarker = L.circleMarker([
+        const currentLocationMarker = L.marker([
             APOLLO_11_MAP.landingSite.yMeters,
             APOLLO_11_MAP.landingSite.xMeters,
-        ], {
-            radius: 7,
-            color: '#8ab4f8',
-            fillColor: '#1a73e8',
-            fillOpacity: 1,
-            weight: 3,
-        })
+        ], { icon: createMarkerIcon('current') })
             .bindPopup('<strong>Current location</strong><br>Simulated astronaut position')
             .addTo(map);
         currentLocationMarker.on('click', (event) => {
             if (interactionMode === 'destination') {
                 L.DomEvent.stopPropagation(event);
-                setDestination(currentLocationMarker.getLatLng());
-                resetRoutes();
+                if (selectingField === 'start') {
+                    selectMapLocation(currentLocationMarker.getLatLng(), 'Current location', 'current-location');
+                } else {
+                    setDestination(currentLocationMarker.getLatLng());
+                    resetRoutes();
+                }
             }
         });
 
@@ -203,11 +267,8 @@ function MapCanvas() {
             startLocation.position.lat !== APOLLO_11_MAP.landingSite.yMeters
             || startLocation.position.lng !== APOLLO_11_MAP.landingSite.xMeters
         ) {
-            L.circleMarker([startLocation.position.lat, startLocation.position.lng], {
-                radius: 6,
-                color: '#34a853',
-                fillColor: '#34a853',
-                fillOpacity: 1,
+            L.marker([startLocation.position.lat, startLocation.position.lng], {
+                icon: createMarkerIcon('start'),
             })
                 .bindPopup(`<strong>Route starting point</strong><br>${startLocation.label}`)
                 .addTo(map);
@@ -238,32 +299,28 @@ function MapCanvas() {
                     .addTo(map);
             });
 
-            L.circleMarker([destination.lat, destination.lng], {
-                radius: 6,
-                color: '#ff6b6b',
-                fillColor: '#ff6b6b',
-                fillOpacity: 1,
+            L.marker([destination.lat, destination.lng], {
+                icon: createMarkerIcon('destination'),
             })
                 .bindPopup('<strong>Destination</strong>')
                 .addTo(map);
         }
 
         userMarkers.forEach((marker) => {
-            const mapMarker = L.circleMarker(
+            const mapMarker = L.marker(
                 [marker.position.lat, marker.position.lng],
-                {
-                    radius: 6,
-                    color: '#b084cc',
-                    fillColor: '#b084cc',
-                    fillOpacity: 1,
-                },
+                { icon: createMarkerIcon(marker.type) },
             ).addTo(map);
 
             mapMarker.on('click', (event) => {
                 L.DomEvent.stopPropagation(event);
                 if (interactionMode === 'destination') {
-                    setDestination(mapMarker.getLatLng());
-                    resetRoutes();
+                    if (selectingField === 'start') {
+                        selectMapLocation(mapMarker.getLatLng(), marker.title, marker.id);
+                    } else {
+                        setDestination(mapMarker.getLatLng());
+                        resetRoutes();
+                    }
                     return;
                 }
                 openExistingMarkerEditor(marker);
@@ -271,15 +328,9 @@ function MapCanvas() {
         });
 
         if (markerEditor?.mode === 'create') {
-            L.circleMarker(
+            L.marker(
                 [markerEditor.marker.position.lat, markerEditor.marker.position.lng],
-                {
-                    radius: 9,
-                    color: '#1a73e8',
-                    fillColor: '#8ab4f8',
-                    fillOpacity: 0.8,
-                    dashArray: '4 4',
-                },
+                { icon: createMarkerIcon(markerEditor.marker.type || 'base') },
             )
                 .bindTooltip('New marker')
                 .addTo(map);
@@ -298,8 +349,15 @@ function MapCanvas() {
 
         function handleMapClick(event) {
             if (interactionMode === 'destination') {
-                setDestination(event.latlng);
-                resetRoutes();
+                if (selectingField === 'start') {
+                    selectMapLocation(
+                        event.latlng,
+                        `Map point (${event.latlng.lng.toFixed(0)}, ${event.latlng.lat.toFixed(0)})`,
+                    );
+                } else {
+                    setDestination(event.latlng);
+                    resetRoutes();
+                }
             }
         }
 
@@ -327,6 +385,7 @@ function MapCanvas() {
         startLocation,
         userMarkers,
         markerEditor,
+        selectingField,
     ]);
 
     const locationOptions = [
@@ -351,7 +410,13 @@ function MapCanvas() {
     return (
         <div className={`map-shell theme-${theme}`}>
             <aside className="map-sidebar" aria-label="Map navigation">
-                <button className="sidebar-button sidebar-button--menu" aria-label="Open menu">☰</button>
+                <button
+                    className="sidebar-button sidebar-button--menu"
+                    aria-label="Toggle sidebar"
+                    onClick={() => setSidebarPanel((current) => current === 'menu' ? null : 'menu')}
+                >
+                    ☰
+                </button>
                 <button
                     className={interactionMode === 'normal' ? 'sidebar-button sidebar-button--active' : 'sidebar-button'}
                     onClick={() => setInteractionMode('normal')}
@@ -367,11 +432,41 @@ function MapCanvas() {
                     <small>Directions</small>
                 </button>
                 <div className="sidebar-divider" />
-                <button className="sidebar-button" aria-label="Saved places">
+                <button
+                    className={sidebarPanel === 'saved' ? 'sidebar-button sidebar-button--active' : 'sidebar-button'}
+                    aria-label="Saved places"
+                    onClick={() => setSidebarPanel((current) => current === 'saved' ? null : 'saved')}
+                >
                     <span>♡</span>
                     <small>Saved</small>
                 </button>
             </aside>
+
+            {sidebarPanel && (
+                <div className="sidebar-panel">
+                    <div className="sidebar-panel__header">
+                        <h2>{sidebarPanel === 'saved' ? 'Saved places' : 'L.I.F.E. map'}</h2>
+                        <button className="icon-button" onClick={() => setSidebarPanel(null)} aria-label="Close sidebar panel">×</button>
+                    </div>
+                    {sidebarPanel === 'saved' ? (
+                        userMarkers.length ? userMarkers.map((marker) => (
+                            <button
+                                className="sidebar-saved-place"
+                                key={marker.id}
+                                onClick={() => {
+                                    openExistingMarkerEditor(marker);
+                                    setSidebarPanel(null);
+                                }}
+                            >
+                                <strong>{marker.title}</strong>
+                                <span>{marker.description || 'Saved lunar location'}</span>
+                            </button>
+                        )) : <p className="directions-hint">Double-click the map to save a place.</p>
+                    ) : (
+                        <p className="directions-hint">Explore the Apollo 11 landing site or open Directions to plan a route.</p>
+                    )}
+                </div>
+            )}
 
             <button
                 className="theme-toggle"
@@ -422,15 +517,15 @@ function MapCanvas() {
                             id="start-location"
                             type="search"
                             aria-label="Starting point"
-                            placeholder="Choose starting point"
                             value={startSearch}
                             placeholder={`Starting point: ${startLocation.label}`}
                             onChange={(event) => {
                                 setStartSearch(event.target.value);
+                                setSelectingField(null);
                                 resetRoutes();
                             }}
                         />
-                        <button className="swap-locations" aria-label="Swap start and destination">↕</button>
+                        <button className="swap-locations" onClick={swapLocations} aria-label="Swap start and destination">↕</button>
                         <input
                             type="text"
                             aria-label="Destination"
@@ -438,6 +533,20 @@ function MapCanvas() {
                             value={destination ? `Map point (${destination.lng.toFixed(0)}, ${destination.lat.toFixed(0)})` : ''}
                             readOnly
                         />
+                    </div>
+                    <div className="map-pick-actions">
+                        <button
+                            className={selectingField === 'start' ? 'map-pick-button map-pick-button--active' : 'map-pick-button'}
+                            onClick={() => setSelectingField('start')}
+                        >
+                            {selectingField === 'start' ? 'Click map for start' : 'Pick starting point on map'}
+                        </button>
+                        <button
+                            className={selectingField === 'destination' ? 'map-pick-button map-pick-button--active' : 'map-pick-button'}
+                            onClick={() => setSelectingField('destination')}
+                        >
+                            {selectingField === 'destination' ? 'Click map for destination' : 'Pick destination on map'}
+                        </button>
                     </div>
                     <div className="location-results">
                         {filteredLocations.map((location) => (
@@ -455,6 +564,11 @@ function MapCanvas() {
                             </button>
                         ))}
                     </div>
+                    {selectingField && (
+                        <p className="directions-hint">
+                            Click anywhere on the map to set the {selectingField === 'start' ? 'starting point' : 'destination'}.
+                        </p>
+                    )}
                     {destination && (
                         <button
                             className="plan-route-button"
@@ -562,6 +676,25 @@ function MapCanvas() {
                                         },
                                     })}
                             />
+                            <label htmlFor="marker-type">Place type</label>
+                            <select
+                                id="marker-type"
+                                value={markerEditor.marker.type || 'base'}
+                                onChange={(event) =>
+                                    setMarkerEditor({
+                                        ...markerEditor,
+                                        marker: {
+                                            ...markerEditor.marker,
+                                            type: event.target.value,
+                                        },
+                                    })}
+                            >
+                                {MARKER_TYPES.map((markerType) => (
+                                    <option key={markerType.id} value={markerType.id}>
+                                        {markerType.label}
+                                    </option>
+                                ))}
+                            </select>
                             <label htmlFor="marker-description">Description</label>
                             <textarea
                                 id="marker-description"

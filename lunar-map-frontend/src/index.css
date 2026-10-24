@@ -80,12 +80,100 @@ button {
   width: 100%;
   height: 100%;
   color: #e8eaed;
-  background: #101318;
+  background: #141b27;
 }
 
 .map-canvas {
   width: 100%;
   height: 100%;
+  background: #141b27;
+}
+
+.lunar-marker {
+  display: grid;
+  place-items: center;
+  width: 34px !important;
+  height: 42px !important;
+  background: transparent;
+  border: 0;
+}
+
+.lunar-marker::after {
+  position: absolute;
+  bottom: 1px;
+  width: 9px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  content: "";
+  filter: blur(2px);
+}
+
+.lunar-marker span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  font-weight: 800;
+  transform: rotate(-45deg);
+}
+
+.lunar-marker span b {
+  display: block;
+  transform: rotate(45deg);
+}
+
+.lunar-marker--base span {
+  background: #8b5cf6;
+}
+
+.lunar-marker--oxygen span {
+  background: #06b6d4;
+  font-size: 11px;
+}
+
+.lunar-marker--landing span {
+  background: #f59e0b;
+}
+
+.lunar-marker--current span {
+  background: #2563eb;
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.25), 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+.lunar-marker--destination span {
+  background: #ef4444;
+}
+
+.lunar-marker--start span {
+  background: #16a34a;
+  border-radius: 50%;
+}
+
+.lunar-marker--current span,
+.lunar-marker--start span {
+  transform: none;
+}
+
+.theme-dark .leaflet-container {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 31% 72%, rgba(255, 255, 255, 0.45) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 67% 28%, rgba(255, 255, 255, 0.55) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 86% 64%, rgba(255, 255, 255, 0.4) 0 1px, transparent 1.5px),
+    #141b27;
+}
+
+.theme-light .leaflet-container {
+  background: #eef1f5;
 }
 
 .map-sidebar,
@@ -167,6 +255,54 @@ button {
   width: 42px;
   margin: 8px 0;
   border-top: 1px solid var(--panel-border);
+}
+
+.sidebar-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 72px;
+  z-index: 1050;
+  width: min(320px, calc(100vw - 72px));
+  padding: 20px 16px;
+  color: inherit;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+  box-shadow: 8px 0 24px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.sidebar-panel__header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.sidebar-saved-place {
+  display: grid;
+  width: 100%;
+  gap: 4px;
+  padding: 12px;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+}
+
+.sidebar-saved-place:hover {
+  background: rgba(128, 128, 128, 0.14);
+}
+
+.sidebar-saved-place span {
+  color: var(--panel-muted);
+  font-size: 12px;
 }
 
 .theme-dark .leaflet-control-zoom,
@@ -323,6 +459,29 @@ button {
   font-size: 18px;
 }
 
+.map-pick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0 4px 28px;
+}
+
+.map-pick-button {
+  padding: 9px 8px;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.map-pick-button:hover,
+.map-pick-button--active {
+  color: #fff;
+  background: #1a73e8;
+  border-color: #1a73e8;
+}
+
 .location-results {
   display: grid;
   gap: 2px;
@@ -437,13 +596,22 @@ button {
 }
 
 .place-panel input,
-.place-panel textarea {
+.place-panel textarea,
+.place-panel select {
   width: 100%;
   padding: 10px;
   color: inherit;
   background: transparent;
   border: 1px solid var(--panel-border);
   border-radius: 6px;
+}
+
+.place-panel select {
+  color-scheme: dark;
+}
+
+.theme-light .place-panel select {
+  color-scheme: light;
 }
 
 .place-panel__actions {
@@ -503,6 +671,10 @@ button {
   .map-sidebar {
     width: 64px;
     padding-inline: 4px;
+  }
+
+  .sidebar-panel {
+    left: 64px;
   }
 
   .sidebar-button {
