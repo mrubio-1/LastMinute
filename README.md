@@ -170,7 +170,7 @@ The backend should be available at:
 
 http://127.0.0.1:8000
 
-7. Access API Documentation
+### 7. Access API Documentation
 
 FastAPI automatically generates interactive API documentation.
 
@@ -180,39 +180,43 @@ http://127.0.0.1:8000/docs
 
 This interface allows developers to explore and test available endpoints.
 
-🔌 Planned API Endpoints
-Method	Endpoint	Description
-GET	/	API welcome message
-GET	/health	Check backend status
-GET	/astronaut/location	Retrieve astronaut position
-POST	/astronaut/move	Update astronaut position
-POST	/navigation/route	Calculate navigation route
-GET	/navigation/return	Calculate route back to base
-GET	/hazards	Retrieve simulated lunar hazards
+### 🔌 Planned API Endpoints
 
-These endpoints are part of the proposed API design and may not all be implemented yet.
+|   Method	    |   Endpoint            |	Description                         |
+|---------------|-----------------------|---------------------------------------|
+|   GET	        |   /	                |   API welcome message                 |
+|   GET	        |   /health	            |   Check backend status                |
+|   GET	        |   /astronaut/location	|   Retrieve astronaut position         |
+|   POST	    |   /astronaut/move	    |   Update astronaut position           |
+|   POST	    |   /navigation/route	|   Calculate navigation route          |
+|   GET	        |   /navigation/return	|   Calculate route back to base        |
+|   GET	        |   /hazards	        |   Retrieve simulated lunar hazards    |
 
-👥 Team
+
+*These endpoints are part of the proposed API design and may not all be implemented yet.*
+
+### 👥 Team
 
 L.I.F.E. is being developed by a four-person team.
 
-Role	Responsibilities
-Backend Developer	FastAPI development, API endpoints, backend integration
-Frontend Developer	User interface, map visualization, API integration
-Navigation Developer	Route calculations, coordinate systems, pathfinding
-Simulation Developer	Astronaut movement, environmental simulation, safety features
+|      Role              |	                   Responsibilities                              |
+|------------------------|-------------------------------------------------------------------|
+|  Backend Developer	 |    FastAPI development, API endpoints, backend integration        |
+|  Frontend Developer	 |    User interface, map visualization, API integration             |
+|  Navigation Developer	 |    Route calculations, coordinate systems, pathfinding            |  
+|  Simulation Developer	 |    Astronaut movement, environmental simulation, safety features  |
 
-Team responsibilities may be adjusted throughout development.
+*Team responsibilities may be adjusted throughout development.*
 
-📌 Project Status
+### 📌 Project Status
 
-🚧 In Development — Hackathon Prototype
+## 🚧 In Development — Hackathon Prototype
 
 Development Period: October 23–25, 2026
 Submission Deadline: October 25, 2026, at 12:00 PM
 
 The current focus is developing a functional local prototype that demonstrates lunar navigation and astronaut safety capabilities.
 
-🌕 L.I.F.E.
+## 🌕 L.I.F.E.
 
 Navigate the Moon. Protect Every Life.
