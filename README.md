@@ -71,7 +71,7 @@ The initial prototype aims to include:
 | Component                 | Technology              |
 | ------------------------- | ----------------------- |
 | Backend                   | Python, FastAPI         |
-| Frontend                  | TBD                     |
+| Frontend                  | React, Vite, Leaflit    |
 | Navigation Algorithms     | TBD                     |
 | Mathematical Calculations | NumPy                   |
 | API Documentation         | Swagger UI              |
