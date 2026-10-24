@@ -6,3 +6,65 @@ html, body, #root {
   overflow: hidden;
   background-color: #0b0b0c;
 }
+
+.map-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.map-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.coordinate-tracker {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  padding: 10px 12px;
+  color: white;
+  background: rgba(11, 11, 12, 0.85);
+  border-radius: 6px;
+  font-family: monospace;
+  pointer-events: none;
+}
+
+.destination-button {
+  position: absolute;
+  bottom: 24px;
+  left: 16px;
+  z-index: 1000;
+  padding: 10px 14px;
+  color: white;
+  background: #2c6eaa;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.destination-status {
+  position: absolute;
+  right: 16px;
+  top: 125px;
+  z-index: 1000;
+  padding: 10px 12px;
+  color: white;
+  background: rgba(11, 11, 12, 0.85);
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.marker-button {
+  position: absolute;
+  bottom: 64px;
+  left: 16px;
+  z-index: 1000;
+  padding: 10px 14px;
+  color: white;
+  background: #5b4b9a;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
