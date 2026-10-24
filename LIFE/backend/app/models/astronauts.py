@@ -6,6 +6,7 @@ class Astronaut(BaseModel):
     name: str # Name of the astronaut
     x: float # X-coordinate of the astronaut's location
     y: float # Y-coordinate of the astronaut's location
+    active: bool = False # Whether the astronaut is currently active/selected or not
 
 class AstronautLocation(BaseModel):
     x: float # X-coordinate of the astronaut's location
