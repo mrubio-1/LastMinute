@@ -1,5 +1,7 @@
 
 import math
+from app.services import astronaut_service
+
 
 # Simulated satellite positions on the lunar map.
 SATELLITES = {
@@ -56,6 +58,16 @@ def simulate_satellite_position(astronaut_x, astronaut_y):
         "estimated_position": estimated_position,
         "positioning_status": "SUCCESS"
     }
+
+
+# Simulate satellite positioning using the active astronaut's location.
+def track_astronaut_with_satellites():
+    astronaut_location = astronaut_service.get_astronaut_location()
+
+    return simulate_satellite_position(
+        astronaut_location["x"],
+        astronaut_location["y"]
+    )
 
 
 # Test the simulation.
