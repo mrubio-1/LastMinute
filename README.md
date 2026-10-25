@@ -180,20 +180,26 @@ http://127.0.0.1:8000/docs
 
 This interface allows developers to explore and test available endpoints.
 
-### 🔌 Planned API Endpoints
+### 🔌 API Endpoints
 
 |   Method	    |   Endpoint            |	Description                         |
 |---------------|-----------------------|---------------------------------------|
 |   GET	        |   /	                |   API welcome message                 |
 |   GET	        |   /health	            |   Check backend status                |
+|   GET	        |   /astronaut	        |   List available astronauts            |
 |   GET	        |   /astronaut/location	|   Retrieve astronaut position         |
+|   POST	    |   /astronaut/select/{id} | Select the active astronaut         |
 |   POST	    |   /astronaut/move	    |   Update astronaut position           |
+|   GET	        |   /astronaut/hazards	|   Hazards near the active astronaut   |
+|   GET	        |   /astronaut/positioning | Satellite position estimate         |
 |   POST	    |   /navigation/route	|   Calculate navigation route          |
-|   GET	        |   /navigation/return	|   Calculate route back to base        |
-|   GET	        |   /hazards	        |   Retrieve simulated lunar hazards    |
+|   GET	        |   /locations	        |   Retrieve map locations               |
+|   GET	        |   /hazards	        |   Retrieve map hazards                 |
 
 
-*These endpoints are part of the proposed API design and may not all be implemented yet.*
+Navigation accepts a `destination_id` for a backend location. It also accepts
+`current_location` and `destination` coordinate objects, which the frontend
+uses for arbitrary points selected directly on the map.
 
 ### 👥 Team
 
@@ -270,3 +276,30 @@ Build the frontend before pushing:
 cd lunar-map-frontend
 npm run build
 ```
+
+### Frontend capabilities
+
+The frontend provides a dark, responsive lunar map using the local Apollo 11
+image and Leaflet's `CRS.Simple` coordinate system. It supports:
+
+* Explore and Directions workflows with map-point start and destination picking.
+* Backend-defined locations, typed saved markers, and colored hazard circles.
+* Four backend vehicle profiles: xEMU Suit, Unpressurized Rover, Pressurized
+  Cruiser, and Lunar Hopper.
+* Multiple backend route options with path geometry, risk, hazard clearance,
+  incline, travel time, and projected oxygen usage.
+* Astronaut selection, current-location tracking, satellite-positioning status,
+  oxygen status, nearby-hazard alerts, and emergency messages.
+* Route loading/error states, route selection highlighting, dark/light themes,
+  coordinate tracking, and responsive sidebar panels.
+* Pointer and marker elevation readouts from a local Apollo 11 crop of the
+  [SLDEM2015 LOLA/Kaguya terrain model](https://imbrium.mit.edu/DATA/SLDEM2015/TILES/JP2/SLDEM2015_256_0N_60N_000_120.JP2).
+  The crop uses 256 pixels per degree (about 118 m per pixel at the equator),
+  and its elevations are relative to the 1,737,400 m reference radius. This
+  resolution is suitable for a prototype readout, not precise site navigation.
+  The current route planner still considers hazards rather than DEM-derived
+  slope.
+
+The backend keeps astronaut selection, position, and oxygen in memory. Refresh
+the mission panels after selecting an astronaut or moving one; restarting the
+backend resets that state.

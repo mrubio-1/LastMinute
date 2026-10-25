@@ -1,15 +1,13 @@
+from fastapi import HTTPException
+
 from app.models import navigation as navigation_models
 from app.services import astronaut_service, oxygen
 from app.services.luna_navigator import LunarNavigator
-from fastapi import HTTPException
 from app.services.pathfinding import RouteNotFound
 
 def calculate_route(request: navigation_models.NavigationRequest):
-    
     astronaut = astronaut_service.get_astronaut_info()
     incline_deg = 5.0
-    
-    # Use the LunarNavigator to calculate the route
     navigator = LunarNavigator(vehicle_type=request.vehicle_type)
 
     try:
@@ -36,4 +34,3 @@ def calculate_route(request: navigation_models.NavigationRequest):
         )
 
     return route
-

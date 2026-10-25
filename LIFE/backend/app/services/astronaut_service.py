@@ -35,29 +35,44 @@ def select_astronaut_by_id(astronaut_id: int):
 
 def move_astronaut(movement: astronaut_models.AstronautMove):
     astronaut = get_astronaut_info()
+    if movement.team_member_ids:
+        requested_ids = set(movement.team_member_ids)
+        moving_astronauts = [
+            member for member in astronauts.roster
+            if member.id in requested_ids
+        ]
+        if len(moving_astronauts) != len(requested_ids):
+            raise HTTPException(status_code=404, detail="One or more team astronauts were not found.")
+        if astronaut.id not in requested_ids:
+            raise HTTPException(status_code=422, detail="The selected astronaut must be included in the moving team.")
+    else:
+        moving_astronauts = [astronaut]
 
-    distance_meters = math.hypot(
-        movement.x - astronaut.x,
-        movement.y - astronaut.y,
-    )
+    movement_updates = []
 
-    report = oxygen.monitor_route_oxygen(
-        current_oxygen_liters=astronaut.current_oxygen_liters,
-        max_capacity_liters=astronaut.max_oxygen_liters,
-        distance_km=distance_meters / 1000.0,
-        incline_deg=5.0,
-        vehicle_type=movement.vehicle_type,
-    )
-
-    if report["oxygen_used_liters"] > astronaut.current_oxygen_liters:
-        raise HTTPException(
-            status_code=409,
-            detail="Not enough oxygen to complete this movement.",
+    for member in moving_astronauts:
+        distance_meters = math.hypot(
+            movement.x - member.x,
+            movement.y - member.y,
         )
+        report = oxygen.monitor_route_oxygen(
+            current_oxygen_liters=member.current_oxygen_liters,
+            max_capacity_liters=member.max_oxygen_liters,
+            distance_km=distance_meters / 1000.0,
+            incline_deg=5.0,
+            vehicle_type=movement.vehicle_type,
+        )
+        if report["oxygen_used_liters"] > member.current_oxygen_liters:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{member.name} does not have enough oxygen to complete this movement.",
+            )
+        movement_updates.append((member, report))
 
-    astronaut.current_oxygen_liters = report["oxygen_remaining_liters"]
-    astronaut.x = movement.x
-    astronaut.y = movement.y
+    for member, report in movement_updates:
+        member.current_oxygen_liters = report["oxygen_remaining_liters"]
+        member.x = movement.x
+        member.y = movement.y
 
     return {"x": astronaut.x, "y": astronaut.y}
 
@@ -69,8 +84,8 @@ def get_nearby_hazards():
 def get_astronauts_oxygen():
     astronaut = get_astronaut_info()
     return oxygen.monitor_oxygen(
-        current_oxygen_liters=astronaut_models.current_oxygen_liters,
-        max_capacity_liters=astronaut_models.max_oxygen_liters,
+        current_oxygen_liters=astronaut.current_oxygen_liters,
+        max_capacity_liters=astronaut.max_oxygen_liters,
         oxygen_used_liters=0
     )
 
@@ -81,4 +96,3 @@ def get_astronaut_emergency():
         current_oxygen_liters=astronaut.current_oxygen_liters,
         max_capacity_liters=astronaut.max_oxygen_liters,
     )
-
