@@ -1,9 +1,6 @@
 # L.I.F.E. — Lunar Integrated Framework for Exploration
 
-L.I.F.E. is a local lunar navigation and safety prototype. Its React map
-provides a simulated lunar surface for exploring destinations, planning routes,
-and viewing astronaut status. A FastAPI backend supplies the map data,
-navigation, and mission status.
+L.I.F.E. is an interactive lunar navigation and survival simulation system designed to assist astronauts exploring the Moon while accounting for environmental hazards and resource limitations. The system combines simulated astronaut tracking, satellite-based positioning, route planning, and oxygen monitoring to demonstrate how future lunar exploration systems could support astronaut safety. Its React map provides a simulated lunar surface for exploring destinations, planning routes, and viewing astronaut status. A FastAPI backend supplies the map data, navigation, and mission status.
 
 ## Project status
 
