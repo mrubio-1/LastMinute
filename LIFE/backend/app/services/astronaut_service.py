@@ -1,7 +1,8 @@
+import math
 from fastapi import HTTPException
 from app.data import astronauts 
 from app.models import astronauts as astronaut_models
-from app.services import hazard_service
+from app.services import hazard_service, oxygen, emergency
 
 def get_astronaut_info():
     for astronaut in astronauts.roster:
@@ -11,7 +12,7 @@ def get_astronaut_info():
     
 
 def get_all_astronauts():
-    return [astronaut_models.Astronaut(id=astronaut.id, name=astronaut.name, x=astronaut.x, y=astronaut.y, active=astronaut.active) for astronaut in astronauts.roster]
+    return astronauts.roster
 
 def get_astronaut_location():
     astronaut_info = get_astronaut_info()
@@ -33,13 +34,51 @@ def select_astronaut_by_id(astronaut_id: int):
     return get_astronaut_info()
 
 def move_astronaut(movement: astronaut_models.AstronautMove):
-    astronaut_info = get_astronaut_info()
-    astronaut_info.x = movement.x
-    astronaut_info.y = movement.y
-    return {"x": astronaut_info.x, "y": astronaut_info.y}
+    astronaut = get_astronaut_info()
+
+    distance_meters = math.hypot(
+        movement.x - astronaut.x,
+        movement.y - astronaut.y,
+    )
+
+    report = oxygen.monitor_route_oxygen(
+        current_oxygen_liters=astronaut.current_oxygen_liters,
+        max_capacity_liters=astronaut.max_oxygen_liters,
+        distance_km=distance_meters / 1000.0,
+        incline_deg=5.0,
+        vehicle_type=movement.vehicle_type,
+    )
+
+    if report["oxygen_used_liters"] > astronaut.current_oxygen_liters:
+        raise HTTPException(
+            status_code=409,
+            detail="Not enough oxygen to complete this movement.",
+        )
+
+    astronaut.current_oxygen_liters = report["oxygen_remaining_liters"]
+    astronaut.x = movement.x
+    astronaut.y = movement.y
+
+    return {"x": astronaut.x, "y": astronaut.y}
 
 def get_nearby_hazards():
     astronaut_location = get_astronaut_location()
     nearby_hazards = hazard_service.get_hazards_at_position(astronaut_location["x"], astronaut_location["y"])
     return nearby_hazards
+
+def get_astronauts_oxygen():
+    astronaut = get_astronaut_info()
+    return oxygen.monitor_oxygen(
+        current_oxygen_liters=astronaut_models.current_oxygen_liters,
+        max_capacity_liters=astronaut_models.max_oxygen_liters,
+        oxygen_used_liters=0
+    )
+
+def get_astronaut_emergency():
+    astronaut = get_astronaut_info()
+
+    return emergency.monitor_emergencies(
+        current_oxygen_liters=astronaut.current_oxygen_liters,
+        max_capacity_liters=astronaut.max_oxygen_liters,
+    )
 
