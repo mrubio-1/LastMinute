@@ -292,6 +292,13 @@ image and Leaflet's `CRS.Simple` coordinate system. It supports:
   oxygen status, nearby-hazard alerts, and emergency messages.
 * Route loading/error states, route selection highlighting, dark/light themes,
   coordinate tracking, and responsive sidebar panels.
+* Pointer and marker elevation readouts from a local Apollo 11 crop of the
+  [SLDEM2015 LOLA/Kaguya terrain model](https://imbrium.mit.edu/DATA/SLDEM2015/TILES/JP2/SLDEM2015_256_0N_60N_000_120.JP2).
+  The crop uses 256 pixels per degree (about 118 m per pixel at the equator),
+  and its elevations are relative to the 1,737,400 m reference radius. This
+  resolution is suitable for a prototype readout, not precise site navigation.
+  The current route planner still considers hazards rather than DEM-derived
+  slope.
 
 The backend keeps astronaut selection, position, and oxygen in memory. Refresh
 the mission panels after selecting an astronaut or moving one; restarting the

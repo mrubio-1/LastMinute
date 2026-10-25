@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { APOLLO_11_MAP } from '../config/apollo11Map.js';
+import { loadElevationGrid, sampleElevationMeters } from '../utils/elevation.js';
+import { formatLunarCoordinates } from '../utils/lunarCoordinates.js';
 
 const IMAGE_URL = '/testImage.webp';
 const DEFAULT_API_URL = 'http://127.0.0.1:8000';
@@ -183,8 +185,16 @@ function createDefaultTeamName(members) {
     return members.map((astronaut) => getAstronautInitials(astronaut.name)).join(' + ');
 }
 
-function getElevationMeters(position) {
-    return Number.isFinite(position?.zMeters) ? position.zMeters : 0;
+function getElevationMeters(position, elevationGrid) {
+    return sampleElevationMeters(elevationGrid, {
+        xMeters: position?.lng ?? position?.x,
+        yMeters: position?.lat ?? position?.y,
+    });
+}
+
+function formatElevation(position, elevationGrid) {
+    const elevation = getElevationMeters(position, elevationGrid);
+    return Number.isFinite(elevation) ? `${elevation.toFixed(2)} m` : 'unavailable';
 }
 
 function formatLiters(value) {
@@ -252,6 +262,9 @@ function MapCanvas() {
     const mapElementRef = useRef(null);
     const routeAbortControllerRef = useRef(null);
     const [mousePosition, setMousePosition] = useState(null);
+    const [elevationGrid, setElevationGrid] = useState(null);
+    const [elevationStatus, setElevationStatus] = useState('loading');
+    const [elevationError, setElevationError] = useState('');
     const [destination, setDestination] = useState(null);
     const [destinationId, setDestinationId] = useState(null);
     const [destinationSearch, setDestinationSearch] = useState('');
@@ -297,6 +310,31 @@ function MapCanvas() {
     const [simulationStep, setSimulationStep] = useState(0);
     const [simulationError, setSimulationError] = useState('');
     const [missionError, setMissionError] = useState('');
+
+    useEffect(() => {
+        let cancelled = false;
+
+        loadElevationGrid()
+            .then((grid) => {
+                if (!cancelled) {
+                    setElevationGrid(grid);
+                    setElevationStatus('ready');
+                    setElevationError('');
+                }
+            })
+            .catch((error) => {
+                if (!cancelled) {
+                    setElevationStatus('error');
+                    setElevationError(error instanceof Error
+                        ? error.message
+                        : 'Unable to load lunar elevation data.');
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const resetRoutes = () => {
         if (simulationStatus === 'running') {
@@ -920,7 +958,7 @@ function MapCanvas() {
             title: landingOverride?.title || 'Eagle Lunar Module',
             description: landingOverride?.description || 'Apollo 11 landing site. Coordinates: 0.67408° N, 23.47297° E.',
             type: landingOverride?.type || 'landing',
-            position: landingOverride?.position || { lat: yMeters, lng: xMeters, zMeters: 0 },
+            position: landingOverride?.position || { lat: yMeters, lng: xMeters },
         };
         const visibleAstronauts = astronauts.length > 0
             ? astronauts
@@ -1033,7 +1071,7 @@ function MapCanvas() {
                 return;
             }
             const position = getTeamPosition(team.members);
-            const markerPosition = { lat: position.y, lng: position.x, zMeters: 0 };
+            const markerPosition = { lat: position.y, lng: position.x };
             const astronautPlace = {
                 id: team.id,
                 teamId: team.id,
@@ -1078,7 +1116,7 @@ function MapCanvas() {
                     id: astronaut.id,
                     title: astronaut.name,
                     description: 'Astronaut current position.',
-                    position: { lat: astronaut.y, lng: astronaut.x, zMeters: 0 },
+                    position: { lat: astronaut.y, lng: astronaut.x },
                     astronauts: [astronaut],
                     nearbyAstronauts,
                 };
@@ -1119,7 +1157,6 @@ function MapCanvas() {
                         position: {
                             lat: hazard.position.y,
                             lng: hazard.position.x,
-                            zMeters: 0,
                         },
                         isHazard: true,
                         severity,
@@ -1268,7 +1305,10 @@ function MapCanvas() {
                 lat,
                 xMeters: lng * metersPerPixel,
                 yMeters: lat * metersPerPixel,
-                zMeters: 0,
+                zMeters: sampleElevationMeters(elevationGrid, {
+                    xMeters: lng * metersPerPixel,
+                    yMeters: lat * metersPerPixel,
+                }),
             });
         }
 
@@ -1317,6 +1357,7 @@ function MapCanvas() {
         backendLocations,
         astronauts,
         markerOverrides,
+        elevationGrid,
         destinationSearch,
         markerEditor,
         selectingField,
@@ -1540,13 +1581,26 @@ function MapCanvas() {
                     <>
                         <div>X: {mousePosition.xMeters.toFixed(2)} m</div>
                         <div>Y: {mousePosition.yMeters.toFixed(2)} m</div>
-                        <div>Z: {mousePosition.zMeters.toFixed(2)} m</div>
-                        <small>Elevation uses the flat prototype datum.</small>
+                        <div>
+                            Z: {Number.isFinite(mousePosition.zMeters)
+                                ? `${mousePosition.zMeters.toFixed(2)} m`
+                                : 'unavailable'}
+                        </div>
+                        <div>
+                            Lat/Lon (approx): {formatLunarCoordinates(mousePosition.xMeters, mousePosition.yMeters)}
+                        </div>
+                        {elevationStatus === 'loading' && <small>Loading elevation…</small>}
+                        {elevationStatus === 'error' && (
+                            <small>Elevation unavailable: {elevationError}</small>
+                        )}
                     </>
                 ) : (
                     <>
                         <div>Move your pointer over the map</div>
-                        <small>Elevation uses the flat prototype datum.</small>
+                        {elevationStatus === 'loading' && <small>Loading elevation…</small>}
+                        {elevationStatus === 'error' && (
+                            <small>Elevation unavailable: {elevationError}</small>
+                        )}
                     </>
                 )}
             </div>
@@ -1891,7 +1945,13 @@ function MapCanvas() {
                                                     {astronaut.active ? 'Selected' : 'Available'} ·{' '}
                                                     O₂ {formatLiters(astronaut.current_oxygen_liters)} / {formatLiters(astronaut.max_oxygen_liters)} L
                                                 </span>
-                                                <span>X: {astronaut.x} m · Y: {astronaut.y} m · Z: 0 m</span>
+                                                <span>
+                                                    X: {astronaut.x} m · Y: {astronaut.y} m ·{' '}
+                                                    Z: {formatElevation({ x: astronaut.x, y: astronaut.y }, elevationGrid)}
+                                                </span>
+                                                <span>
+                                                    Lat/Lon (approx): {formatLunarCoordinates(astronaut.x, astronaut.y)}
+                                                </span>
                                             </div>
                                             {!astronaut.active && (
                                                 <button
@@ -1920,7 +1980,13 @@ function MapCanvas() {
                                                     {astronaut.active ? 'Selected' : 'Available'} ·{' '}
                                                     O₂ {formatLiters(astronaut.current_oxygen_liters)} / {formatLiters(astronaut.max_oxygen_liters)} L
                                                 </span>
-                                                <span>X: {astronaut.x} m · Y: {astronaut.y} m · Z: 0 m</span>
+                                                <span>
+                                                    X: {astronaut.x} m · Y: {astronaut.y} m ·{' '}
+                                                    Z: {formatElevation({ x: astronaut.x, y: astronaut.y }, elevationGrid)}
+                                                </span>
+                                                <span>
+                                                    Lat/Lon (approx): {formatLunarCoordinates(astronaut.x, astronaut.y)}
+                                                </span>
                                             </div>
                                             <button
                                                 className="place-panel__select-astronaut"
@@ -1938,8 +2004,17 @@ function MapCanvas() {
                             <div className="place-panel__coordinates">
                                     X: {markerEditor.marker.position.lng.toFixed(2)} m ·{' '}
                                     Y: {markerEditor.marker.position.lat.toFixed(2)} m ·{' '}
-                                    Z: {getElevationMeters(markerEditor.marker.position).toFixed(2)} m (flat datum)
+                                    Z: {formatElevation(markerEditor.marker.position, elevationGrid)}
                                 </div>
+                            <small className="place-panel__hint">
+                                SLDEM2015 elevation · ~118 m cells · relative to the 1,737,400 m reference radius
+                            </small>
+                            <div className="place-panel__coordinates">
+                                Lat/Lon (approx): {formatLunarCoordinates(
+                                    markerEditor.marker.position.lng,
+                                    markerEditor.marker.position.lat,
+                                )}
+                            </div>
                             {!markerEditor.marker.isHazard && (
                                 <div className="place-panel__actions">
                                     <button
