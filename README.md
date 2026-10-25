@@ -1,305 +1,161 @@
-# 🌕 L.I.F.E.
+# L.I.F.E. — Lunar Integrated Framework for Exploration
 
-### Lunar Integrated Framework for Exploration
+L.I.F.E. is a local lunar navigation and safety prototype. Its React map
+provides a simulated lunar surface for exploring destinations, planning routes,
+and viewing astronaut status. A FastAPI backend supplies the map data,
+navigation, and mission status.
 
-**Navigate the Moon. Protect Every Life.**
+## Project status
 
-## 🚀 Overview
+The project is an in-development hackathon prototype. It runs locally and uses
+in-memory backend state; it is not a production navigation system. Map
+coordinates and elevation readouts are for demonstration and should not be used
+for real mission planning.
 
-**L.I.F.E. (Lunar Integrated Framework for Exploration)** is a lunar navigation and safety simulation system designed to assist astronauts exploring the Moon.
+## Features
 
-Unlike Earth, the Moon does not currently have a fully operational GPS system comparable to the one used on Earth. Astronauts navigating the lunar surface face challenges such as hazardous terrain, limited resources, and the risk of becoming disoriented.
+- Explore and Directions workflows on a lunar surface map, with selectable
+  points for route start and destination.
+- Backend-provided locations and hazards, plus typed markers for map points
+  and hazards.
+- Route planning for an xEMU Suit, Unpressurized Rover, Pressurized Cruiser,
+  or Lunar Hopper. Route options include distance, estimated time, risk,
+  hazard clearance, and oxygen estimates.
+- Astronaut selection and simulated location, with oxygen, satellite
+  positioning, nearby-hazard, and emergency status panels.
+- Pointer and marker elevation readouts using a local Apollo 11-area crop of
+  the [SLDEM2015 LOLA/Kaguya terrain model](https://imbrium.mit.edu/DATA/SLDEM2015/TILES/JP2/SLDEM2015_256_0N_60N_000_120.JP2).
+- Responsive interface, light and dark themes, route loading/error states, and
+  route selection highlighting.
 
-L.I.F.E. aims to address these challenges by providing a simulated lunar navigation system that helps astronauts plan routes, monitor their positions, identify potential hazards, and safely return to their habitats.
+The elevation crop has 256 pixels per degree (about 118 m per pixel at the
+equator); it is suitable for a prototype readout, not precise site navigation.
+The current route planner uses hazard data and does not calculate route slope
+from the elevation model.
 
-This project was developed as part of a hackathon focused on the challenge:
+## Technology
 
-> "Create a system that helps humans sustain life in extreme off-Earth environments."
+| Area | Technology |
+| --- | --- |
+| Frontend | React, Vite, Leaflet, React-Leaflet |
+| Backend | Python, FastAPI, Pydantic, Uvicorn |
+| State | In-memory backend data |
 
-## 🎯 Project Objectives
-
-Our primary objectives are to:
-
-* Simulate astronaut positioning and movement on the lunar surface.
-* Provide navigation between lunar locations.
-* Calculate efficient routes while considering hazardous terrain.
-* Identify potential environmental hazards.
-* Assist astronauts with safely returning to their lunar habitats.
-* Demonstrate how navigation technology can contribute to human survival beyond Earth.
-
-## ✨ Features
-
-### MVP Features
-
-The initial prototype aims to include:
-
-**📍 Astronaut Position Tracking**
-
-* Display an astronaut's simulated position.
-* Update coordinates as the astronaut moves.
-* Retrieve positioning information through the backend API.
-
-**🗺️ Lunar Navigation**
-
-* Select destinations on a simulated lunar map.
-* Calculate routes between locations.
-* Display recommended routes.
-
-**⚠️ Hazard Detection**
-
-* Identify dangerous areas on the lunar surface.
-* Account for hazardous terrain during route calculations.
-* Provide warnings when approaching dangerous locations.
-
-**🏠 Return-to-Base Navigation**
-
-* Identify the astronaut's home habitat.
-* Calculate a route back to the habitat.
-* Assist with emergency navigation.
-
-### Potential Future Features
-
-* Oxygen-aware navigation and resource monitoring.
-* Simulated lunar satellite positioning.
-* Real-time astronaut tracking.
-* Emergency alerts and mission control notifications.
-* Advanced terrain analysis.
-* Multiple astronaut support.
-
-## 🛠️ Technology Stack
-
-| Component                 | Technology              |
-| ------------------------- | ----------------------- |
-| Backend                   | Python, FastAPI         |
-| Frontend                  | React, Vite, Leaflit    |
-| Navigation Algorithms     | TBD                     |
-| Mathematical Calculations | NumPy                   |
-| API Documentation         | Swagger UI              |
-| Database                  | In-memory storage (MVP) |
-| Development Environment   | Visual Studio Code      |
-| Version Control           | Git & GitHub            |
-
-## 📁 Project Structure
+## Repository layout
 
 ```text
-LIFE/
-│
-├── backend/
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py
-│   │   │
-│   │   ├── routers/
-│   │   │
-│   │   ├── services/
-│   │   │
-│   │   └── models/
-│   │
-│   └── requirements.txt
-│
-├── frontend/
-│
-├── .gitignore
-└── README.md
+LastMinute/
+├── LIFE/
+│   └── backend/
+│       ├── app/
+│       │   ├── data/          # In-memory astronauts, locations, and hazards
+│       │   ├── models/        # API request and response models
+│       │   ├── routers/       # FastAPI endpoints
+│       │   ├── services/      # Navigation and mission logic
+│       │   └── main.py        # FastAPI application
+│       ├── tests/
+│       └── requirements.txt
+├── lunar-map-frontend/
+│   ├── public/                # Map image, logo, and elevation data
+│   └── src/                   # React application and map components
+├── README.md
+└── requirements.txt
 ```
 
-*Note: The project structure represents the planned organization and may change during development.*
-
-## ⚙️ Getting Started
+## Run locally
 
 ### Prerequisites
 
-Before running the project, ensure you have:
+- Python 3.11 or newer
+- Node.js and npm
 
-* Python 3.11 or newer
-* Git
-* Visual Studio Code (recommended)
-* Node.js (if required by the frontend)
+### 1. Start the backend
 
-### 1. Clone the Repository
-
-```bash
-git clone "https://github.com/mrubio-1/LastMinute.git"
-cd LIFE
-```
-
-### 2. Navigate to the Backend
-
-```bash
-cd backend
-```
-
-### 3. Create a Virtual Environment
-
-```bash
-python -m venv .venv
-```
-
-### 4. Activate the Virtual Environment
-
-**Windows PowerShell:**
+From the repository root, in PowerShell:
 
 ```powershell
+cd .\LIFE\backend
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-```
-
-**Windows Git Bash:**
-
-```bash
-source .venv/Scripts/activate
-```
-
-**macOS / Linux:**
-
-```bash
-source .venv/bin/activate
-```
-
-### 5. Install Dependencies
-
-```bash
 python -m pip install -r requirements.txt
-```
-
-### 6. Start the Backend Server
-
-```bash
-python -m uvicorn app.main:app --reload
-```
-The backend should be available at:
-
-http://127.0.0.1:8000
-
-### 7. Access API Documentation
-
-FastAPI automatically generates interactive API documentation.
-
-Open:
-
-http://127.0.0.1:8000/docs
-
-This interface allows developers to explore and test available endpoints.
-
-### 🔌 API Endpoints
-
-|   Method	    |   Endpoint            |	Description                         |
-|---------------|-----------------------|---------------------------------------|
-|   GET	        |   /	                |   API welcome message                 |
-|   GET	        |   /health	            |   Check backend status                |
-|   GET	        |   /astronaut	        |   List available astronauts            |
-|   GET	        |   /astronaut/location	|   Retrieve astronaut position         |
-|   POST	    |   /astronaut/select/{id} | Select the active astronaut         |
-|   POST	    |   /astronaut/move	    |   Update astronaut position           |
-|   GET	        |   /astronaut/hazards	|   Hazards near the active astronaut   |
-|   GET	        |   /astronaut/positioning | Satellite position estimate         |
-|   POST	    |   /navigation/route	|   Calculate navigation route          |
-|   GET	        |   /locations	        |   Retrieve map locations               |
-|   GET	        |   /hazards	        |   Retrieve map hazards                 |
-
-
-Navigation accepts a `destination_id` for a backend location. It also accepts
-`current_location` and `destination` coordinate objects, which the frontend
-uses for arbitrary points selected directly on the map.
-
-### 👥 Team
-
-L.I.F.E. is being developed by a four-person team.
-
-|      Role              |	                   Responsibilities                              |
-|------------------------|-------------------------------------------------------------------|
-|  Backend Developer	 |    FastAPI development, API endpoints, backend integration        |
-|  Frontend Developer	 |    User interface, map visualization, API integration             |
-|  Navigation Developer	 |    Route calculations, coordinate systems, pathfinding            |  
-|  Simulation Developer	 |    Astronaut movement, environmental simulation, safety features  |
-
-*Team responsibilities may be adjusted throughout development.*
-
-### 📌 Project Status
-
-## 🚧 In Development — Hackathon Prototype
-
-Development Period: October 23–25, 2026
-Submission Deadline: October 25, 2026, at 12:00 PM
-
-The current focus is developing a functional local prototype that demonstrates lunar navigation and astronaut safety capabilities.
-
-## 🌕 L.I.F.E.
-
-Navigate the Moon. Protect Every Life.
-
-## ▶️ Run the local prototype
-
-### Backend
-
-From the repository root:
-
-```bash
-python -m venv LIFE/backend/venv
-source LIFE/backend/venv/bin/activate
-python -m pip install -r requirements.txt
-cd LIFE/backend
 python -m uvicorn app.main:app --reload
 ```
 
-The API runs at `http://127.0.0.1:8000`. On Windows PowerShell, activate the
-environment with `.\LIFE\backend\venv\Scripts\Activate.ps1` instead, then run
-`cd LIFE\backend` before starting Uvicorn.
+The API is available at <http://127.0.0.1:8000>; interactive API
+documentation is at <http://127.0.0.1:8000/docs>.
 
-### Frontend
+If PowerShell blocks virtual-environment activation, either allow activation
+for the current user or run the Python commands using
+`.\.venv\Scripts\python.exe -m pip ...` and
+`.\.venv\Scripts\python.exe -m uvicorn ...` without activating it.
 
-In a second terminal:
+### 2. Start the frontend
 
-```bash
-cd lunar-map-frontend
+Open a second terminal at the repository root:
+
+```powershell
+cd .\lunar-map-frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
-`VITE_API_URL` controls which backend URL the frontend uses. Update `.env` when
-the backend is hosted somewhere other than the local default.
+Open the local URL printed by Vite, normally
+<http://localhost:5173>. In development, Vite proxies the API requests to
+`http://127.0.0.1:8000` by default. If the backend uses another address, set
+`VITE_API_URL` in `lunar-map-frontend/.env` to that API base URL.
 
-### Smoke checks
+## API endpoints
 
-```bash
-curl http://127.0.0.1:8000/health
-curl http://127.0.0.1:8000/astronaut/location
-curl -X POST http://127.0.0.1:8000/navigation/route \
-  -H "Content-Type: application/json" \
-  -d '{"current_location":{"x":450,"y":290},"destination":{"x":700,"y":420},"vehicle_type":"Unpressurized Rover"}'
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Backend health check |
+| `GET` | `/astronaut` | List astronauts |
+| `GET` | `/astronaut/info` | Get the selected astronaut |
+| `GET` | `/astronaut/location` | Get the selected astronaut’s location |
+| `POST` | `/astronaut/select/{astronaut_id}` | Select an astronaut |
+| `POST` | `/astronaut/move` | Update astronaut location |
+| `GET` | `/astronaut/hazards` | Get nearby hazards |
+| `GET` | `/astronaut/positioning` | Get satellite-based position estimate |
+| `GET` | `/astronaut/oxygen` | Get oxygen status |
+| `GET` | `/astronaut/emergency` | Get emergency status and alerts |
+| `POST` | `/navigation/route` | Calculate route options |
+| `GET` | `/locations` | List map locations |
+| `GET` | `/hazards` | List map hazards |
+
+The route endpoint accepts `current_location` and `destination` points, each
+with numeric `x` and `y` coordinates, and an optional `vehicle_type`:
+
+```json
+{
+  "current_location": { "x": 450, "y": 290 },
+  "destination": { "x": 700, "y": 420 },
+  "vehicle_type": "Unpressurized Rover"
+}
 ```
 
-Build the frontend before pushing:
+Supported vehicle types are `xEMU Suit`, `Unpressurized Rover`,
+`Pressurized Cruiser`, and `Lunar Hopper`.
 
-```bash
-cd lunar-map-frontend
+## Development checks
+
+Build the frontend:
+
+```powershell
+cd .\lunar-map-frontend
 npm run build
 ```
 
-### Frontend capabilities
+Run the frontend linter:
 
-The frontend provides a dark, responsive lunar map using the local Apollo 11
-image and Leaflet's `CRS.Simple` coordinate system. It supports:
+```powershell
+npm run lint
+```
 
-* Explore and Directions workflows with map-point start and destination picking.
-* Backend-defined locations, typed saved markers, and colored hazard circles.
-* Four backend vehicle profiles: xEMU Suit, Unpressurized Rover, Pressurized
-  Cruiser, and Lunar Hopper.
-* Multiple backend route options with path geometry, risk, hazard clearance,
-  incline, travel time, and projected oxygen usage.
-* Astronaut selection, current-location tracking, satellite-positioning status,
-  oxygen status, nearby-hazard alerts, and emergency messages.
-* Route loading/error states, route selection highlighting, dark/light themes,
-  coordinate tracking, and responsive sidebar panels.
-* Pointer and marker elevation readouts from a local Apollo 11 crop of the
-  [SLDEM2015 LOLA/Kaguya terrain model](https://imbrium.mit.edu/DATA/SLDEM2015/TILES/JP2/SLDEM2015_256_0N_60N_000_120.JP2).
-  The crop uses 256 pixels per degree (about 118 m per pixel at the equator),
-  and its elevations are relative to the 1,737,400 m reference radius. This
-  resolution is suitable for a prototype readout, not precise site navigation.
-  The current route planner still considers hazards rather than DEM-derived
-  slope.
+Run the backend tests from `LIFE\backend`:
 
-The backend keeps astronaut selection, position, and oxygen in memory. Refresh
-the mission panels after selecting an astronaut or moving one; restarting the
-backend resets that state.
+```powershell
+python -m pytest
+```
+
+Restarting the backend resets astronaut selection, position, and oxygen to
+their in-memory defaults.
