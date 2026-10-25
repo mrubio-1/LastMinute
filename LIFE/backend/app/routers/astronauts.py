@@ -41,3 +41,7 @@ def get_astronaut_positioning():
 def get_astronuat_oxygen():
     return astronaut_service.get_astronauts_oxygen()
 
+@router.get("/emergency", response_model=astronauts.AstronautEmergencyResponse,)
+def get_astronaut_emergency():
+    return astronaut_service.get_astronaut_emergency()
+

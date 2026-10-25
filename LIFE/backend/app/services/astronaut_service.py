@@ -2,7 +2,7 @@ import math
 from fastapi import HTTPException
 from app.data import astronauts 
 from app.models import astronauts as astronaut_models
-from app.services import hazard_service, oxygen
+from app.services import hazard_service, oxygen, emergency
 
 def get_astronaut_info():
     for astronaut in astronauts.roster:
@@ -69,9 +69,16 @@ def get_nearby_hazards():
 def get_astronauts_oxygen():
     astronaut = get_astronaut_info()
     return oxygen.monitor_oxygen(
-        current_oxygen_liters=astronaut.current_oxygen_liters,
-        max_capacity_liters=astronaut.max_oxygen_liters,
+        current_oxygen_liters=astronaut_models.current_oxygen_liters,
+        max_capacity_liters=astronaut_models.max_oxygen_liters,
         oxygen_used_liters=0
     )
 
+def get_astronaut_emergency():
+    astronaut = get_astronaut_info()
+
+    return emergency.monitor_emergencies(
+        current_oxygen_liters=astronaut.current_oxygen_liters,
+        max_capacity_liters=astronaut.max_oxygen_liters,
+    )
 

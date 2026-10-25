@@ -1,8 +1,13 @@
 from pydantic import BaseModel, Field, FiniteFloat
 from typing import Literal
 
+class NavigationPoint(BaseModel):
+    x: FiniteFloat
+    y: FiniteFloat
+
 class NavigationRequest(BaseModel):
-    destination_id: int = Field(..., description="The ID of the destination location")
+    current_location: NavigationPoint
+    destination: NavigationPoint
     vehicle_type: Literal["xEMU Suit", "Unpressurized Rover", "Pressurized Cruiser", "Lunar Hopper"] = Field("Unpressurized Rover", description="The type of vehicle used for navigation (either rover, cruiser, suit, or hopper)")
 
 class RouteOxygenEstimate(BaseModel):
@@ -16,10 +21,13 @@ class NavigationRoute(BaseModel):
     id: str = Field(..., description="A unique identifier for the route")
     name: str = Field(..., description="The name of the route")
     description: str = Field(..., description="A brief description of the route")
-    distanceMeters: int = Field(..., description="The total distance of the route in meters")
-    estimatedTimeMinutes: int = Field(..., description="The estimated time to complete the route in minutes")
+    distanceMeters: FiniteFloat = Field(..., ge=0, description="Length of the returned path in meters")
+    estimatedTimeMinutes: FiniteFloat = Field(..., ge=0, description="Estimated travel time in minutes")
+    minimumHazardClearanceMeters: FiniteFloat | None = Field(..., description="Minimum distance to a hazard boundary; null when no hazards exist")
+    assumedInclineDegrees: FiniteFloat = Field(..., description="Simulated constant incline; no elevation data is available")
+    oxygen_sufficient: bool
     risk: Literal["low", "medium", "high"] = Field(..., description="The risk level associated with the route (low, medium, or high)")
-    points: list[tuple[float, float]] = Field(..., description="A list of (x, y) coordinate points that define the route")
+    points: list[tuple[float, float]] = Field(..., description="A list of (y, x) coordinate points that define the route")
     oxygen_estimate: RouteOxygenEstimate
 
 class NavigationResponse(BaseModel):
