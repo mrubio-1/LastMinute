@@ -276,3 +276,23 @@ Build the frontend before pushing:
 cd lunar-map-frontend
 npm run build
 ```
+
+### Frontend capabilities
+
+The frontend provides a dark, responsive lunar map using the local Apollo 11
+image and Leaflet's `CRS.Simple` coordinate system. It supports:
+
+* Explore and Directions workflows with map-point start and destination picking.
+* Backend-defined locations, typed saved markers, and colored hazard circles.
+* Four backend vehicle profiles: xEMU Suit, Unpressurized Rover, Pressurized
+  Cruiser, and Lunar Hopper.
+* Multiple backend route options with path geometry, risk, hazard clearance,
+  incline, travel time, and projected oxygen usage.
+* Astronaut selection, current-location tracking, satellite-positioning status,
+  oxygen status, nearby-hazard alerts, and emergency messages.
+* Route loading/error states, route selection highlighting, dark/light themes,
+  coordinate tracking, and responsive sidebar panels.
+
+The backend keeps astronaut selection, position, and oxygen in memory. Refresh
+the mission panels after selecting an astronaut or moving one; restarting the
+backend resets that state.

@@ -117,7 +117,7 @@ button {
   filter: blur(2px);
 }
 
-.lunar-marker span {
+.lunar-marker:not(.lunar-marker--astronaut) > span {
   position: relative;
   z-index: 1;
   display: grid;
@@ -133,13 +133,23 @@ button {
   transform: rotate(-45deg);
 }
 
-.lunar-marker span b {
+.lunar-marker:not(.lunar-marker--astronaut) > span > b {
   display: block;
   transform: rotate(45deg);
 }
 
 .lunar-marker--base span {
   background: #8b5cf6;
+}
+
+.lunar-marker--base span b {
+  font-size: 17px;
+  font-weight: 900;
+  -webkit-text-stroke: 0.7px currentColor;
+  text-shadow:
+    0 0 0.7px currentColor,
+    0.5px 0 currentColor,
+    -0.5px 0 currentColor;
 }
 
 .lunar-marker--oxygen span {
@@ -169,6 +179,232 @@ button {
 .lunar-marker--current span,
 .lunar-marker--start span {
   transform: none;
+}
+
+.lunar-marker--astronaut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px !important;
+}
+
+.lunar-marker--team {
+  width: 110px !important;
+  height: 62px !important;
+}
+
+.lunar-marker--location-grouped {
+  width: auto !important;
+  height: 68px !important;
+}
+
+.lunar-marker--astronaut::after {
+  display: none;
+}
+
+.lunar-team-marker {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.lunar-team-marker .lunar-astronaut-dot {
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+}
+
+.lunar-location-marker {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: max-content;
+}
+
+.lunar-location-marker > span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  font-weight: 800;
+  transform: rotate(-45deg);
+}
+
+.lunar-location-marker > span > b {
+  display: block;
+  transform: rotate(45deg);
+}
+
+.lunar-location-astronauts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lunar-location-astronaut {
+  display: grid;
+  min-width: 24px;
+  height: 18px;
+  place-items: center;
+  padding: 1px 4px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.lunar-location-astronaut + .lunar-location-astronaut {
+  margin-left: -3px;
+}
+
+.lunar-location-astronaut--1 {
+  background: #0284c7;
+}
+
+.lunar-location-astronaut--2 {
+  background: #ea580c;
+}
+
+.lunar-location-astronaut--3 {
+  background: #7c3aed;
+}
+
+.lunar-location-astronaut--4 {
+  background: #059669;
+}
+
+.lunar-location-astronaut--5 {
+  background: #db2777;
+}
+
+.lunar-location-astronaut--6 {
+  background: #ca8a04;
+}
+
+.lunar-astronaut-marker__initials {
+  z-index: 2;
+  padding: 2px 6px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 7px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.lunar-astronaut-dot {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  color: #fff;
+  border: 2px solid rgba(255,  255, 255, 0.95);
+  border-radius: 50%;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.55);
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.lunar-astronaut-dot + .lunar-astronaut-dot {
+  margin-left: -6px;
+}
+
+.lunar-astronaut-dot--1 {
+  background: #0284c7;
+}
+
+.lunar-astronaut-dot--2 {
+  background: #ea580c;
+}
+
+.lunar-astronaut-dot--3 {
+  background: #7c3aed;
+}
+
+.lunar-astronaut-dot--4 {
+  background: #059669;
+}
+
+.lunar-astronaut-dot--5 {
+  background: #db2777;
+}
+
+.lunar-astronaut-dot--6 {
+  background: #ca8a04;
+}
+
+.lunar-astronaut-marker__initials--1 {
+  background: #0284c7;
+}
+
+.lunar-astronaut-marker__initials--2 {
+  background: #ea580c;
+}
+
+.lunar-astronaut-marker__initials--3 {
+  background: #7c3aed;
+}
+
+.lunar-astronaut-marker__initials--4 {
+  background: #059669;
+}
+
+.lunar-astronaut-marker__initials--5 {
+  background: #db2777;
+}
+
+.lunar-astronaut-marker__initials--6 {
+  background: #ca8a04;
+}
+
+.lunar-astronaut-dot--active {
+  z-index: 1;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.42), 0 2px 7px rgba(0,  0, 0, 0.55);
+}
+
+.place-panel__team-name {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.place-panel__team-name > div {
+  display: flex;
+  gap: 7px;
+}
+
+.place-panel__team-name input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  color: inherit;
+  background: rgba(128, 128, 128, 0.1);
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+}
+
+.place-panel__hint {
+  color: var(--panel-muted);
+  font-size: 11px;
+  font-weight: 400;
 }
 
 .theme-dark .leaflet-container {
@@ -211,6 +447,21 @@ button {
   border-radius: 16px;
   text-align: center;
   transform: translate(-50%, -50%);
+}
+
+.map-data-warning {
+  position: absolute;
+  top: 76px;
+  left: 88px;
+  z-index: 1000;
+  max-width: min(460px, calc(100vw - 112px));
+  padding: 10px 14px;
+  color: #fca5a5;
+  background: var(--panel-bg);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 8px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+  font-size: 12px;
 }
 
 .route-loading__spinner {
@@ -371,6 +622,24 @@ button {
   font-size: 12px;
 }
 
+.mission-status--safe {
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.mission-status--warning,
+.mission-alert--warning {
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.mission-status--critical,
+.mission-alert--critical {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.14);
+}
+
 .sidebar-field {
   display: grid;
   gap: 6px;
@@ -430,6 +699,14 @@ button {
   pointer-events: none;
 }
 
+.coordinate-tracker small {
+  display: block;
+  margin-top: 5px;
+  color: var(--panel-muted);
+  font-family: inherit;
+  font-size: 10px;
+}
+
 .destination-tools {
   position: absolute;
   top: 76px;
@@ -461,6 +738,13 @@ button {
 .directions-tab--active {
   color: var(--accent);
   background: rgba(26, 115, 232, 0.18);
+}
+
+.directions-tab:disabled,
+.directions-close:disabled,
+.map-pick-button:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 .directions-close {
@@ -567,8 +851,10 @@ button {
 
 .location-results {
   display: grid;
+  max-height: 180px;
   gap: 2px;
   margin-top: 12px;
+  overflow-y: auto;
 }
 
 .location-result {
@@ -584,6 +870,10 @@ button {
 
 .location-result:hover {
   background: rgba(128, 128, 128, 0.14);
+}
+
+.location-result:disabled {
+  cursor: default;
 }
 
 .location-result span,
@@ -613,6 +903,18 @@ button {
   border-radius: 16px;
 }
 
+.route-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.route-panel__header h2 {
+  margin: 0;
+}
+
 .route-panel h2,
 .place-panel h2 {
   margin: 0 0 12px;
@@ -639,9 +941,89 @@ button {
   border-color: var(--accent);
 }
 
+.route-option:disabled {
+  cursor: default;
+}
+
 .route-option span {
   color: var(--panel-muted);
   font-size: 12px;
+}
+
+.route-simulation {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.route-simulation__mission {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.route-simulation__mission span {
+  color: var(--panel-muted);
+}
+
+.simulation-progress,
+.simulation-result {
+  margin: 0;
+  color: var(--panel-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.simulation-progress-bar {
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(138, 180, 248, 0.2);
+}
+
+.simulation-progress-bar::-webkit-progress-bar {
+  background: rgba(138, 180, 248, 0.2);
+  border-radius: 999px;
+}
+
+.simulation-progress-bar::-webkit-progress-value {
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.simulation-progress-bar::-moz-progress-bar {
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.simulation-result--complete {
+  color: #4ade80;
+}
+
+.simulation-result--error {
+  color: #fca5a5;
+}
+
+.simulate-route-button {
+  width: 100%;
+  padding: 11px 14px;
+  color: #fff;
+  background: #1a73e8;
+  border: 0;
+  border-radius: 8px;
+}
+
+.simulate-route-button:disabled {
+  cursor: default;
+  opacity: 0.65;
 }
 
 .place-panel {
@@ -649,6 +1031,8 @@ button {
   top: 76px;
   right: 18px;
   width: min(320px, calc(100vw - 36px));
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
   padding: 18px;
   border-radius: 16px;
 }
@@ -669,6 +1053,70 @@ button {
 .place-panel__description {
   color: var(--panel-muted);
   line-height: 1.45;
+}
+
+.place-panel__hazard {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.place-panel__hazard span {
+  color: var(--panel-muted);
+}
+
+.place-panel__hazard--critical {
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+.place-panel__hazard--warning {
+  border-color: rgba(245, 158, 11, 0.55);
+}
+
+.place-panel__astronauts {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+  font-size: 12px;
+}
+
+.place-panel__astronaut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px;
+  background: rgba(128, 128, 128, 0.1);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+}
+
+.place-panel__astronaut > div {
+  display: grid;
+  gap: 4px;
+}
+
+.place-panel__astronaut span {
+  color: var(--panel-muted);
+  font-size: 11px;
+}
+
+.place-panel__select-astronaut {
+  padding: 6px 9px;
+  color: #fff;
+  background: #1a73e8;
+  border: 0;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.place-panel__select-astronaut:disabled {
+  cursor: default;
+  opacity: 0.65;
 }
 
 .place-panel label {

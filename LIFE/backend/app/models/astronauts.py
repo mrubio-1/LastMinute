@@ -26,6 +26,7 @@ class AstronautMove(BaseModel):
         "Pressurized Cruiser",
         "Lunar Hopper"
     ] = "Unpressurized Rover"
+    team_member_ids: list[int] = Field(default_factory=list)
 
 class AstronautOxygenResponse(BaseModel):
     oxygen_remaining_liters: FiniteFloat = Field(..., ge=0) # Remaining oxygen supply in liters

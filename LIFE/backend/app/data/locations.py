@@ -3,7 +3,7 @@
 from app.models import location as location_models
 
 locations = [
-    location_models.Location(id=1, name="Lunar Base", description="Primary habitat for astronauts", x=0.0, y=0.0),
-    location_models.Location(id=2, name="Crater Edge", description="Scenic overlook of the lunar crater", x=10.0, y=5.0),
-    location_models.Location(id=3, name="Resource Depot", description="Storage facility for mining operations", x=-5.0, y=15.0),
+    location_models.Location(id=1, name="Lunar Base", description="Primary habitat for astronauts", x=220.0, y=160.0),
+    location_models.Location(id=2, name="Crater Edge", description="Scenic overlook of the lunar crater", x=740.0, y=390.0),
+    location_models.Location(id=3, name="Resource Depot", description="Storage facility for mining operations", x=820.0, y=145.0),
 ]
