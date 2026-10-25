@@ -1,8 +1,14 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, FiniteFloat
 from typing import Literal
 
+class Point(BaseModel):
+    x: FiniteFloat
+    y: FiniteFloat
+
 class NavigationRequest(BaseModel):
-    destination_id: int = Field(..., description="The ID of the destination location")
+    destination_id: int | None = Field(None, description="The ID of the destination location")
+    current_location: Point | None = None
+    destination: Point | None = None
     vehicle_type: Literal["xEMU Suit", "Unpressurized Rover", "Pressurized Cruiser", "Lunar Hopper"] = Field("Unpressurized Rover", description="The type of vehicle used for navigation (either rover, cruiser, suit, or hopper)")
 
 

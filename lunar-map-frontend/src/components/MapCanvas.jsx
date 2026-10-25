@@ -91,6 +91,7 @@ function MapCanvas() {
     const mapElementRef = useRef(null);
     const [mousePosition, setMousePosition] = useState(null);
     const [destination, setDestination] = useState(null);
+    const [destinationId, setDestinationId] = useState(null);
     const [currentLocation, setCurrentLocation] = useState({
         x: APOLLO_11_MAP.landingSite.xMeters,
         y: APOLLO_11_MAP.landingSite.yMeters,
@@ -116,6 +117,11 @@ function MapCanvas() {
     const [selectingField, setSelectingField] = useState(null);
     const [sidebarPanel, setSidebarPanel] = useState(null);
     const [hazards, setHazards] = useState(() => readStoredHazards());
+    const [backendLocations, setBackendLocations] = useState([]);
+    const [astronauts, setAstronauts] = useState([]);
+    const [selectedAstronaut, setSelectedAstronaut] = useState(null);
+    const [positioning, setPositioning] = useState(null);
+    const [nearbyHazards, setNearbyHazards] = useState([]);
 
     const resetRoutes = () => {
         setRoutes([]);
@@ -127,15 +133,42 @@ function MapCanvas() {
     useEffect(() => {
         let cancelled = false;
 
-        fetch(`${API_BASE_URL}/astronaut/location`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`Location request failed with status ${response.status}.`);
+        const loadAstronaut = async () => {
+            try {
+                const rosterResponse = await fetch(`${API_BASE_URL}/astronaut`);
+                if (!rosterResponse.ok) {
+                    throw new Error(`Astronaut request failed with status ${rosterResponse.status}.`);
                 }
-                return response.json();
-            })
-            .then((location) => {
-                if (!cancelled && Number.isFinite(Number(location.x)) && Number.isFinite(Number(location.y))) {
+
+                const roster = await rosterResponse.json();
+                if (cancelled || !Array.isArray(roster) || roster.length === 0) {
+                    return;
+                }
+
+                setAstronauts(roster);
+                let activeAstronaut = roster.find((astronaut) => astronaut.active);
+                if (!activeAstronaut) {
+                    const selectResponse = await fetch(
+                        `${API_BASE_URL}/astronaut/select/${roster[0].id}`,
+                        { method: 'POST' },
+                    );
+                    if (!selectResponse.ok) {
+                        throw new Error(`Astronaut selection failed with status ${selectResponse.status}.`);
+                    }
+                    activeAstronaut = await selectResponse.json();
+                }
+
+                if (cancelled) {
+                    return;
+                }
+
+                setSelectedAstronaut(activeAstronaut);
+                const locationResponse = await fetch(`${API_BASE_URL}/astronaut/location`);
+                if (!locationResponse.ok) {
+                    throw new Error(`Location request failed with status ${locationResponse.status}.`);
+                }
+                const location = await locationResponse.json();
+                if (Number.isFinite(Number(location.x)) && Number.isFinite(Number(location.y))) {
                     setCurrentLocation({ x: Number(location.x), y: Number(location.y) });
                     setStartLocation((previous) => previous.id === 'landing-site'
                         ? {
@@ -145,10 +178,43 @@ function MapCanvas() {
                         }
                         : previous);
                 }
-            })
-            .catch(() => {
+
+                const positioningResponse = await fetch(`${API_BASE_URL}/astronaut/positioning`);
+                if (positioningResponse.ok) {
+                    setPositioning(await positioningResponse.json());
+                }
+
+                const nearbyResponse = await fetch(`${API_BASE_URL}/astronaut/hazards`);
+                if (nearbyResponse.ok) {
+                    setNearbyHazards(await nearbyResponse.json());
+                }
+            } catch {
                 // The configured Apollo 11 position remains the local fallback.
-            });
+            }
+        };
+
+        loadAstronaut();
+
+        fetch(`${API_BASE_URL}/locations`)
+            .then((response) => response.ok ? response.json() : [])
+            .then((locations) => {
+                if (!cancelled && Array.isArray(locations)) {
+                    setBackendLocations(locations.map((location) => ({
+                        id: location.id,
+                        label: location.name,
+                        title: location.name,
+                        description: location.description,
+                        type: location.name.toLowerCase().includes('oxygen')
+                            || location.name.toLowerCase().includes('resource')
+                            ? 'oxygen'
+                            : location.name.toLowerCase().includes('landing')
+                                ? 'landing'
+                                : 'base',
+                        position: { lat: location.y, lng: location.x },
+                    })));
+                }
+            })
+            .catch(() => {});
 
         fetch(`${API_BASE_URL}/hazards`)
             .then((response) => response.ok ? response.json() : null)
@@ -232,22 +298,27 @@ function MapCanvas() {
         setSelectedRouteId(null);
 
         try {
+            const requestBody = {
+                current_location: {
+                    x: startLocation.position.lng,
+                    y: startLocation.position.lat,
+                },
+                destination: {
+                    x: destination.lng,
+                    y: destination.lat,
+                },
+                vehicle_type: vehicleType,
+            };
+            if (Number.isInteger(destinationId)) {
+                requestBody.destination_id = destinationId;
+            }
+
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    current_location: {
-                        x: startLocation.position.lng,
-                        y: startLocation.position.lat,
-                    },
-                    destination: {
-                        x: destination.lng,
-                        y: destination.lat,
-                    },
-                    vehicle_type: vehicleType,
-                }),
+                body: JSON.stringify(requestBody),
             });
 
             if (!response.ok) {
@@ -280,6 +351,13 @@ function MapCanvas() {
         resetRoutes();
     };
 
+    const chooseDestination = (position, id = null) => {
+        setDestination(position);
+        setDestinationId(Number.isInteger(id) ? id : null);
+        setSelectingField(null);
+        resetRoutes();
+    };
+
     const swapLocations = () => {
         if (!destination) {
             return;
@@ -292,6 +370,7 @@ function MapCanvas() {
             position: destination,
         });
         setDestination(previousStart.position);
+        setDestinationId(Number.isInteger(previousStart.id) ? previousStart.id : null);
         setStartSearch(previousStart.label);
         setSelectingField(null);
         resetRoutes();
@@ -332,8 +411,7 @@ function MapCanvas() {
                 if (selectingField === 'start') {
                     selectMapLocation(landingSiteMarker.getLatLng(), 'Eagle landing site', 'landing-site');
                 } else {
-                    setDestination(landingSiteMarker.getLatLng());
-                    resetRoutes();
+                    chooseDestination(landingSiteMarker.getLatLng());
                 }
             }
         });
@@ -350,8 +428,7 @@ function MapCanvas() {
                 if (selectingField === 'start') {
                     selectMapLocation(currentLocationMarker.getLatLng(), 'Current location', 'current-location');
                 } else {
-                    setDestination(currentLocationMarker.getLatLng());
-                    resetRoutes();
+                    chooseDestination(currentLocationMarker.getLatLng());
                 }
             }
         });
@@ -431,12 +508,34 @@ function MapCanvas() {
                     if (selectingField === 'start') {
                         selectMapLocation(mapMarker.getLatLng(), marker.title, marker.id);
                     } else {
-                        setDestination(mapMarker.getLatLng());
-                        resetRoutes();
+                        chooseDestination(mapMarker.getLatLng(), marker.id);
                     }
                     return;
                 }
                 openExistingMarkerEditor(marker);
+            });
+
+            backendLocations.forEach((location) => {
+                const mapMarker = L.marker(
+                    [location.position.lat, location.position.lng],
+                    { icon: createMarkerIcon(location.type) },
+                )
+                    .bindPopup(`
+                        <strong>${location.title}</strong><br>
+                        ${location.description || 'Lunar location'}
+                    `)
+                    .addTo(map);
+
+                mapMarker.on('click', (event) => {
+                    L.DomEvent.stopPropagation(event);
+                    if (interactionMode === 'destination') {
+                        if (selectingField === 'start') {
+                            selectMapLocation(mapMarker.getLatLng(), location.label, location.id);
+                        } else {
+                            chooseDestination(mapMarker.getLatLng(), location.id);
+                        }
+                    }
+                });
             });
         });
 
@@ -468,8 +567,7 @@ function MapCanvas() {
                         `Map point (${event.latlng.lng.toFixed(0)}, ${event.latlng.lat.toFixed(0)})`,
                     );
                 } else {
-                    setDestination(event.latlng);
-                    resetRoutes();
+                    chooseDestination(event.latlng);
                 }
             }
         }
@@ -499,6 +597,7 @@ function MapCanvas() {
         selectedRouteId,
         startLocation,
         userMarkers,
+        backendLocations,
         markerEditor,
         selectingField,
     ]);
@@ -516,6 +615,7 @@ function MapCanvas() {
             ...marker,
             label: marker.title,
         })),
+        ...backendLocations,
     ];
 
     const filteredLocations = locationOptions.filter((location) =>
@@ -578,7 +678,58 @@ function MapCanvas() {
                             </button>
                         )) : <p className="directions-hint">Double-click the map to save a place.</p>
                     ) : (
-                        <p className="directions-hint">Explore the Apollo 11 landing site or open Directions to plan a route.</p>
+                        <>
+                            <p className="directions-hint">Explore the Apollo 11 landing site or open Directions to plan a route.</p>
+                            {selectedAstronaut && (
+                                <div className="mission-status">
+                                    <strong>{selectedAstronaut.name}</strong>
+                                    <span>Active astronaut</span>
+                                </div>
+                            )}
+                            {astronauts.length > 1 && (
+                                <label className="sidebar-field">
+                                    Astronaut
+                                    <select
+                                        value={selectedAstronaut?.id || ''}
+                                        onChange={async (event) => {
+                                            const response = await fetch(
+                                                `${API_BASE_URL}/astronaut/select/${event.target.value}`,
+                                                { method: 'POST' },
+                                            );
+                                            if (!response.ok) {
+                                                return;
+                                            }
+                                            const astronaut = await response.json();
+                                            setSelectedAstronaut(astronaut);
+                                            setCurrentLocation({ x: astronaut.x, y: astronaut.y });
+                                            setStartLocation({
+                                                id: 'current-location',
+                                                label: 'Current location',
+                                                position: { lat: astronaut.y, lng: astronaut.x },
+                                            });
+                                            resetRoutes();
+                                        }}
+                                    >
+                                        {astronauts.map((astronaut) => (
+                                            <option key={astronaut.id} value={astronaut.id}>
+                                                {astronaut.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            )}
+                            {positioning && (
+                                <div className="mission-status">
+                                    <strong>Satellite positioning</strong>
+                                    <span>{positioning.satellites_used} satellites · {positioning.positioning_status}</span>
+                                </div>
+                            )}
+                            {nearbyHazards.length > 0 && (
+                                <div className="mission-alert">
+                                    {nearbyHazards.length} nearby hazard{nearbyHazards.length === 1 ? '' : 's'}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             )}

@@ -180,20 +180,26 @@ http://127.0.0.1:8000/docs
 
 This interface allows developers to explore and test available endpoints.
 
-### 🔌 Planned API Endpoints
+### 🔌 API Endpoints
 
 |   Method	    |   Endpoint            |	Description                         |
 |---------------|-----------------------|---------------------------------------|
 |   GET	        |   /	                |   API welcome message                 |
 |   GET	        |   /health	            |   Check backend status                |
+|   GET	        |   /astronaut	        |   List available astronauts            |
 |   GET	        |   /astronaut/location	|   Retrieve astronaut position         |
+|   POST	    |   /astronaut/select/{id} | Select the active astronaut         |
 |   POST	    |   /astronaut/move	    |   Update astronaut position           |
+|   GET	        |   /astronaut/hazards	|   Hazards near the active astronaut   |
+|   GET	        |   /astronaut/positioning | Satellite position estimate         |
 |   POST	    |   /navigation/route	|   Calculate navigation route          |
-|   GET	        |   /navigation/return	|   Calculate route back to base        |
-|   GET	        |   /hazards	        |   Retrieve simulated lunar hazards    |
+|   GET	        |   /locations	        |   Retrieve map locations               |
+|   GET	        |   /hazards	        |   Retrieve map hazards                 |
 
 
-*These endpoints are part of the proposed API design and may not all be implemented yet.*
+Navigation accepts a `destination_id` for a backend location. It also accepts
+`current_location` and `destination` coordinate objects, which the frontend
+uses for arbitrary points selected directly on the map.
 
 ### 👥 Team
 

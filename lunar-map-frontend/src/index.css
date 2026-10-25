@@ -349,6 +349,45 @@ button {
   font-size: 12px;
 }
 
+.mission-status,
+.mission-alert {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+}
+
+.mission-status span {
+  color: var(--panel-muted);
+  font-size: 12px;
+}
+
+.mission-alert {
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+  font-size: 12px;
+}
+
+.sidebar-field {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  color: var(--panel-muted);
+  font-size: 12px;
+}
+
+.sidebar-field select {
+  width: 100%;
+  padding: 8px;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+}
+
 .theme-dark .leaflet-control-zoom,
 .theme-dark .leaflet-bar a {
   color: #e8eaed;

@@ -18,7 +18,7 @@ app.add_middleware(
         "http://localhost:5174",
         "http://127.0.0.1:5174",
     ],
-    allow_methods=["POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"],
 )
 
@@ -31,4 +31,3 @@ app.include_router(navigation.router)
 @app.get("/health", tags=["Health"])
 def health_check():
     return {"status": "ok"}
-
