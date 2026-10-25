@@ -37,3 +37,7 @@ def get_astronaut_positioning():
     except ValueError as e:
         return {"error": HTTPException(status_code=500, detail=str(e))}
 
+@router.get("/oxygen",response_model=astronauts.AstronautOxygenResponse)
+def get_astronuat_oxygen():
+    return astronaut_service.get_astronauts_oxygen()
+
