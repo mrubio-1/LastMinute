@@ -877,6 +877,22 @@ function MapCanvas() {
                             <span>{route.distanceMeters} m</span>
                             <span>{route.estimatedTimeMinutes} minutes</span>
                             <span>Risk: {route.risk}</span>
+                            {route.minimumHazardClearanceMeters != null && (
+                                <span>Hazard clearance: {route.minimumHazardClearanceMeters.toFixed(1)} m</span>
+                            )}
+                            {route.oxygen_estimate && (
+                                <>
+                                    <span>Oxygen needed: {route.oxygen_estimate.oxygen_used_liters} L</span>
+                                    <span>Projected remaining: {route.oxygen_estimate.oxygen_remaining_liters} L ({route.oxygen_estimate.oxygen_percentage}%)</span>
+                                    <span>Projected oxygen status: {route.oxygen_estimate.oxygen_status}</span>
+                                    {route.oxygen_sufficient === false && (
+                                        <span className="route-error">Insufficient oxygen for this route</span>
+                                    )}
+                                </>
+                            )}
+                            {route.assumedInclineDegrees != null && (
+                                <span>Assumed incline: {route.assumedInclineDegrees}°</span>
+                            )}
                         </button>
                     ))}
                 </div>

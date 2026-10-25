@@ -183,53 +183,34 @@ class LunarNavigator:
         """
         Formats calculation results directly into the Frontend JSON Specification
         """
-        start_x, start_y = current_location["x"], current_location["y"]
-        end_x, end_y = destination["x"], destination["y"]
+        from app.services import hazard_service
+        from app.services.pathfinding import find_routes
 
-        # 1. Generate path points in [y, x] format as required by frontend
-        points = [
-            [start_y, start_x],
-            [start_y + 20, start_x + 20],
-            [start_y + 50, start_x + 50],
-            [end_y, end_x]
-        ]
-
-        # 2. Distance Calculation (Euclidean approximation converted to meters)
-        distance_meters = int(math.hypot(end_x - start_x, end_y - start_y) * 3)
-        distance_km = distance_meters / 1000.0
-
-        # 3. Travel Time Calculation
-        time_res = self.calculate_travel_time(distance_km=distance_km, incline_deg=incline_deg)
-
-        # 4. Hazard Detection & Risk Level Assessment
-        hazards = self.detect_hazards(
-            incline_deg=incline_deg,
-            is_psr=False,
-            has_dte_los=True,
-            cumulative_distance_km=distance_km,
-            continuous_sunlight_hours=1.0
+        paths = find_routes(
+            (current_location["x"], current_location["y"]),
+            (destination["x"], destination["y"]),
+            hazard_service.get_hazards(),
         )
-
-        risk_level = "low"
-        if any(h["status"] == "CRITICAL" for h in hazards):
-            risk_level = "high"
-        elif any(h["status"] == "WARNING" for h in hazards):
-            risk_level = "medium"
-
-        # 5. Return Frontend Compliant Payload Structure
-        return {
-            "routes": [
-                {
-                    "id": "route-safe",
-                    "name": "Safest route",
-                    "description": "Avoids steep terrain",
-                    "distanceMeters": distance_meters,
-                    "estimatedTimeMinutes": int(time_res["total_travel_time_min"]),
-                    "risk": risk_level,
-                    "points": points
-                }
-            ]
-        }
+        routes = []
+        for path in paths:
+            travel = self.calculate_travel_time(path["distance"] / 1000.0, incline_deg)
+            clearance = path["clearance"]
+            routes.append({
+                "id": "route-" + path["id"],
+                "name": path["name"],
+                "description": {
+                    "shortest": "Minimizes distance on the search grid while avoiding hazard areas.",
+                    "balanced": "Balances distance with clearance from hazard areas.",
+                    "clearance": "Places a stronger preference on clearance from hazard areas.",
+                }[path["id"]],
+                "distanceMeters": round(path["distance"], 3),
+                "estimatedTimeMinutes": travel["total_travel_time_min"],
+                "risk": "medium" if clearance < 12.0 else "low",
+                "minimumHazardClearanceMeters": round(clearance, 3) if math.isfinite(clearance) else None,
+                "assumedInclineDegrees": incline_deg,
+                "points": [[y, x] for x, y in path["points"]],
+            })
+        return {"routes": routes}
 
 
 # ==========================================
