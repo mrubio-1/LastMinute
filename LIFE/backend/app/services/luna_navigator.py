@@ -195,7 +195,7 @@ class LunarNavigator:
         ]
 
         # 2. Distance Calculation (Euclidean approximation converted to meters)
-        distance_meters = int(math.hypot(end_x - start_x, end_y - start_y) * 3)
+        distance_meters = int(math.hypot(end_x - start_x, end_y - start_y))
         distance_km = distance_meters / 1000.0
 
         # 3. Travel Time Calculation
